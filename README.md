@@ -1,2 +1,5 @@
 # meet-statistics
- google chrome extension to record participation statistics in google meet
+
+Google Chrome extension to record participation statistics in Google Meet.
+
+WIP
