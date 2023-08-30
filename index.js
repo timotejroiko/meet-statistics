@@ -1,15 +1,26 @@
 class Meeting {
     constructor() {
-        this.participants = new Map();
+        /** @type {Map<string, Participant>} */ this.participants = new Map();
+
         this.grid_node = null;
+        this.tab1_node = null;
+        this.tab2_node = null;
+
         this.reactions_node = null;
         this.messages_node = null;
         this.chat_node = null;
+        this.participants_node = null;
+
+        this.messages_observer = null;
         this.reactions_observer = null;
-        this._mainmap = false;
-        this._tab1map = false;
-        this._tab2map = false;
+        this.participants_observer = null;
+        this.chat_observer = null;
+
+        this._mainattached = false;
+        this._tab1attached = false;
+        this._tab2attached = false;
         this._interval = -1;
+        this._debug = true;
     }
     get active() {
         return this._interval > -1;
@@ -17,155 +28,291 @@ class Meeting {
     start() {
         this._interval = setInterval(() => {
             const main = document.querySelector("div[data-participant-id]:not([role])");
-            if(this._mainmap && !main) {
-                if(this._mainmap) {
-                    this._mainmap = false;
-                    this.reactions_observer?.disconnect();
-                    this.messages_observer?.disconnect();
-                    this.reactions_observer = null;
-                    this.messages_observer = null;
-                    this.reactions_node = null;
-                    this.messages_node = null;
-                }
-            } else if(main && !this._mainmap) {
-                this._mainmap = true;
-
-                this.grid_node = document.querySelector("div[data-participant-id]:not([role])")?.parentElement?.parentElement;
-                if(!this.grid_node) { throw new Error("grid_node not found"); }
-
-                this.reactions_node = this.grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
-                if(!this.reactions_node) { throw new Error("reactions_node not found"); }
-
-                this.messages_node = document.querySelector('div[data-update-corner]')?.firstElementChild;
-                if(!this.messages_node) { throw new Error("messages_node not found"); }
-
-                const reactions = new MutationObserver(this.onreaction.bind(this));
-                reactions.observe(this.reactions_node, {
-                    childList: true
-                });
-
-                const messages = new MutationObserver(this.onmessage.bind(this));
-                messages.observe(this.messages_node, {
-                    childList: true
-                });
+            if(this._mainattached && !main) {
+                this._detachMain();
+            } else if(main && !this._mainattached) {
+                this._attachMain();
             }
-
-            const tab1 = document.querySelectorAll("div[data-tab-id='1']");
-            if(this._tab1map && !tab1) {
-                this._tab1map = false;
-
-            } else if(tab1 && !this._tab1map) {
-
+            const tab1 = document.querySelector("div[data-tab-id='1']");
+            if(this._tab1attached && !tab1) {
+                this._detachTab1();
+            } else if(tab1 && !this._tab1attached) {
+                this._attachTab1();
             }
-
-            const tab2 = document.querySelectorAll("div[data-tab-id='2']");
-            if(this._tab2map && !tab2) {
-
-            } else if(tab2 && !this._tab2map) {
-                
+            const tab2 = document.querySelector("div[data-tab-id='2']");
+            if(this._tab2attached && !tab2) {
+                this._detachTab2();
+            } else if(tab2 && !this._tab2attached) {
+                this._attachTab2();
             }
         }, 1000);
+        if(this._debug) {
+            console.log("monitoring started");
+        }
     }
     stop() {
         clearInterval(this._interval);
         this._interval = -1;
-    }
-    async mapNodes() {
-        while(!document.querySelector("div[data-participant-id]:not([role])")) {
-            await new Promise(r => setTimeout(r, 500));
+        if(this._mainattached) {
+            this._detachMain();
         }
-        this.grid_node = document.querySelector("div[data-participant-id]:not([role])")?.parentElement?.parentElement;
-        this.reactions_node = this.grid_node?.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
-        this.messages_node = document.querySelector('div[data-update-corner]')?.firstElementChild;
+        if(this._tab1attached) {
+            this._detachTab1();
+        }
+        if(this._tab2attached) {
+            this._detachTab2();
+        }
+        if(this._debug) {
+            console.log("monitoring stopped");
+        }
     }
-    registerParticipants() {
-        const nodes = [];
+    onreaction(event) {
+        if(this._debug) {
+            console.log("reaction event", event)
+        }
+    }
+    onmessage(event) {
+        if(this._debug) {
+            console.log("message event", event)
+        }
+    }
+    onchat(event) {
+        if(this._debug) {
+            console.log("chat event", event)
+        }
+    }
+    onparticipant(event) {
+        if(this._debug) {
+            console.log("participant event", event)
+        }
+    }
+    _attachMain() {
+        this.grid_node = document.querySelector("div[data-participant-id]:not([role])")?.parentElement?.parentElement;
+        if(!this.grid_node) { throw new Error("grid_node not found"); }
+
+        this.reactions_node = this.grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
+        if(!this.reactions_node) { throw new Error("reactions_node not found"); }
+        this.reactions_observer = new MutationObserver(this.onreaction.bind(this));
+        this.reactions_observer.observe(this.reactions_node, {
+            childList: true
+        });
+
+        this.messages_node = document.querySelector('div[data-update-corner]')?.firstElementChild;
+        if(!this.messages_node) { throw new Error("messages_node not found"); }
+        this.messages_observer = new MutationObserver(this.onmessage.bind(this));
+        this.messages_observer.observe(this.messages_node, {
+            childList: true
+        });
+
         for(const node of this.grid_node.children) {
-            if(node.classList[0] === this.grid_node?.firstElementChild.classList[0]) {
-                const participant = new Participant(node);
-                if(!this.participants.has(participant.id)) {
-                    this.participants.set(participant.id, participant);
+            if(node.classList[0] === this.grid_node.firstElementChild?.classList[0]) {
+                const id = node.firstElementChild?.getAttribute("data-participant-id");
+                if(!id) { throw new Error("id not found"); }
+                const existing = this.participants.get(id);
+                if(existing) {
+                    if(!existing._mainattached) {
+                        existing.attachMain(node);
+                    }
+                } else {
+                    const participant = new Participant(id);
+                    participant.attachMain(node);
+                    this.participants.set(id, participant);
                 }
             }
         }
-    }
-    attachObservers() {
-        const reactions = new MutationObserver(this.onreaction.bind(this));
-        reactions.observe(this.reactions_node, {
-            childList: true
-        });
-        const messages = new MutationObserver(this.onmessage.bind(this));
-        messages.observe(this.messages_node, {
-            childList: true
-        });
-        const participants = new MutationObserver(this.onparticipant.bind(this));
-        participants.observe(this.grid_node, {
-            childList: true
-        });
-        this.reactions_observer = reactions;
-        this.messages_observer = messages;
-    }
-    onreaction(event) {
-        console.log("reaction event", event)
-    }
-    onmessage(event) {
-        console.log("message event", event)
-    }
-    onchat(event) {
-        console.log("chat event", event)
-    }
-    onparticipant(event) {
-        console.log("participant event", event);
 
+        this._mainattached = true;
+
+        if(this._debug) {
+            console.log("main attached");
+        }
+    }
+    _attachTab1() {
+        this.tab1_node = document.querySelector("div[data-tab-id='1']");
+        if(!this.tab1_node) { throw new Error("tab1_node not found"); }
+
+        this.participants_node = this.tab1_node.querySelector("div[role='list']");
+        if(!this.participants_node) { throw new Error("participants_node not found"); }
+        this.participants_observer = new MutationObserver(this.onparticipant.bind(this));
+        this.participants_observer.observe(this.participants_node, {
+            childList: true
+        });
+
+        for(const node of this.participants_node.children) {
+            const id = node.getAttribute("data-participant-id");
+            if(!id) { throw new Error("id not found"); }
+            const existing = this.participants.get(id);
+            if(existing) {
+                if(!existing._tabattached) {
+                    existing.attachTab(node);
+                }
+            } else {
+                const participant = new Participant(id);
+                participant.attachTab(node);
+                this.participants.set(id, participant);
+            }
+        }
+
+        this._tab1attached = true;
+
+        if(this._debug) {
+            console.log("tab1 attached");
+        }
+    }
+    _attachTab2() {
+        this.tab2_node = document.querySelector("div[data-tab-id='2']");
+        if(!this.tab2_node) { throw new Error("tab2_node not found"); }
+        this.chat_node = this.tab2_node.querySelector("div[data-tv]");
+        if(!this.chat_node) { throw new Error("chat_node not found"); }
+        this.chat_observer = new MutationObserver(this.onchat.bind(this));
+        this.chat_observer.observe(this.chat_node, {
+            childList: true
+        });
+        this._tab2attached = true;
+        if(this._debug) {
+            console.log("tab2 attached");
+        }
+    }
+    _detachMain() {
+        this.reactions_observer?.disconnect();
+        this.messages_observer?.disconnect();
+        this.reactions_observer = null;
+        this.messages_observer = null;
+        this.reactions_node = null;
+        this.messages_node = null;
+        this._mainattached = false;
+        this.participants.forEach(participant => participant.detachMain());
+        if(this._debug) {
+            console.log("main detached");
+        }
+    }
+    _detachTab1() {
+        this.participants_observer?.disconnect();
+        this.participants_observer = null;
+        this.participants_node = null;
+        this.tab1_node = null;
+        this._tab1attached = false;
+        this.participants.forEach(participant => participant.detachTab());
+        if(this._debug) {
+            console.log("tab1 detached");
+        }
+    }
+    _detachTab2() {
+        this.chat_observer?.disconnect();
+        this.chat_observer = null;
+        this.chat_node = null;
+        this.tab2_node = null;
+        this._tab2attached = false;
+        if(this._debug) {
+            console.log("tab2 detached");
+        }
     }
 }
 
 class Participant {
     /**
-     * 
+     * @param {string} id 
+     */
+    constructor(id) {
+        this.id = id;
+        this.name = null;
+        this.subname = null;
+        this.self = null;
+        this.avatar = null;
+        this.avatar2 = null;
+        this.mic_node = null;
+        this.mic_observer = null;
+        this.voice_node = null;
+        this.voice_observer = null;
+        this.cam_node = null;
+        this.cam_observer = null;
+        this.hand_node = null
+        this.hand_observer = null;
+        this.tabmic_node = null;
+        this.tabmic_observer = null;
+        this.tabvoice_node = null;
+        this.tabvoice_observer = null;
+        this._mainattached = false;
+        this._tabattached = false;
+    }
+    /**
      * @param {Element} node 
      */
-    constructor(node) {
-        this.id = node.firstElementChild?.getAttribute("data-participant-id");
-        this.self = node.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
-        this.name = node.querySelector("div[jsslot] div[style]")?.textContent;
-        this.avatar = node.querySelector("img")?.getAttribute("src");
-        this.mic_node = node.querySelector("div[data-use-tooltip]");
-        this.voice_node = this.mic_node?.firstChild?.nextSibling;
+    attachMain(node) {
+        if(!this.name) {
+            this.name = node.querySelector("div[jsslot] div[style]")?.textContent;
+        }
+        if(!this.self) {
+            this.self = node.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
+        }
+        if(!this.avatar) {
+            this.avatar = node.querySelector("img")?.getAttribute("src");
+        }
+
+        this.mic_node = node.firstElementChild?.lastElementChild?.lastElementChild?.firstElementChild;
+        if(!this.mic_node) { throw new Error("mic_node not found"); }
+        this.mic_observer = new MutationObserver(this.onmic.bind(this));
+        this.mic_observer.observe(this.mic_node, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+
+        this.voice_node = this.mic_node?.firstChild;
+        if(!this.voice_node) { throw new Error("voice_node not found"); }
+        this.voice_observer = new MutationObserver(this.onvoice.bind(this));
+        this.voice_observer.observe(this.voice_node, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+
         this.cam_node = node.querySelector("div[data-resolution-cap]");
+        if(!this.cam_node) { throw new Error("cam_node not found"); }
+        this.cam_observer = new MutationObserver(this.oncam.bind(this));
+        this.cam_observer.observe(this.cam_node, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+
         this.hand_node = this.cam_node?.firstChild?.firstChild;
-        this.mic_observer = null;
-        this.voice_observer = null;
-        this.cam_observer = null;
-        this.hand_observer = null;
+        if(!this.hand_node) { throw new Error("hand_node not found"); }
+        this.hand_observer = new MutationObserver(this.onhand.bind(this));
+        this.hand_observer.observe(this.hand_node, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+
+        this._mainattached = true;
     }
-    attachObservers() {
-        const mic = new MutationObserver(this.onmic.bind(this));
-        mic.observe(this.mic_node, {
+    /**
+     * @param {Element} node 
+     */
+    attachTab(node) {
+        if(!this.name) {
+            this.name = node.querySelector("div[avatar-tooltip-id] span[talk-id]")?.textContent
+        }
+
+        this.subname = this.self = node.querySelector("div[avatar-tooltip-id]")?.lastElementChild?.lastElementChild?.textContent;
+        this.avatar2 = node.querySelector("img")?.getAttribute("src");
+
+        this.tabmic_node = node.querySelector("div[data-use-tooltip]");
+        if(!this.tabmic_node) { throw new Error("mic_node not found"); }
+        this.tabmic_observer = new MutationObserver(this.ontabmic.bind(this));
+        this.tabmic_observer.observe(this.tabmic_node, {
             attributes: true,
             attributeFilter: ["class"]
         });
-        const voice = new MutationObserver(this.onvoice.bind(this));
-        voice.observe(this.voice_node, {
+
+        this.tabvoice_node = this.tabmic_node?.lastElementChild;
+        if(!this.tabvoice_node) { throw new Error("voice_node not found"); }
+        this.tabvoice_observer = new MutationObserver(this.ontabvoice.bind(this));
+        this.tabvoice_observer.observe(this.tabvoice_node, {
             attributes: true,
             attributeFilter: ["class"]
         });
-        const cam = new MutationObserver(this.oncam.bind(this));
-        cam.observe(this.cam_node, {
-            attributes: true,
-            attributeFilter: ["class"]
-        });
-        const hand = new MutationObserver(this.onhand.bind(this));
-        hand.observe(this.hand_node, {
-            attributes: true,
-            attributeFilter: ["class"]
-        });
-        this.mic_observer = mic;
-        this.voice_observer = voice;
-        this.cam_observer = cam;
-        this.hand_observer = hand;
+
+        this._tabattached = true;
     }
-    detachObservers() {
+    detachMain() {
         this.mic_observer?.disconnect();
         this.voice_observer?.disconnect();
         this.cam_observer?.disconnect();
@@ -174,6 +321,18 @@ class Participant {
         this.voice_observer = null;
         this.cam_observer = null;
         this.hand_observer = null;
+        this.mic_node = null;
+        this.voice_node = null;
+        this.cam_node = null;
+        this.hand_node = null;
+    }
+    detachTab() {
+        this.tabmic_observer?.disconnect();
+        this.tabvoice_observer?.disconnect();
+        this.tabmic_observer = null;
+        this.tabvoice_observer = null;
+        this.tabmic_node= null;
+        this.tabvoice_node = null;
     }
     onmic(event) {
         console.log("mic event", event)
@@ -186,5 +345,11 @@ class Participant {
     }
     onhand(event) {
         console.log("hand event", event)
+    }
+    ontabmic(event) {
+        console.log("tab mic event", event)
+    }
+    ontabvoice(event) {
+        console.log("tab voice event", event)
     }
 }
