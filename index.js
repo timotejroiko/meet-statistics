@@ -10,11 +10,15 @@ class Meeting {
         this.messages_node = null;
         this.chat_node = null;
         this.participants_node = null;
+        this.tabhands_node = null;
+        this.tabhands2_node = null;
 
-        this.messages_observer = null;
         this.reactions_observer = null;
-        this.participants_observer = null;
+        this.messages_observer = null;
         this.chat_observer = null;
+        this.participants_observer = null;
+        this.tabhands_observer = null;
+        this.tabhands2_observer = null;
 
         this._mainattached = false;
         this._tab1attached = false;
@@ -66,24 +70,29 @@ class Meeting {
             console.log("monitoring stopped");
         }
     }
-    onreaction(event) {
+    _onReactionMutation(event) {
         if(this._debug) {
             console.log("reaction event", event)
         }
     }
-    onmessage(event) {
+    _onMessageMutation(event) {
         if(this._debug) {
             console.log("message event", event)
         }
     }
-    onchat(event) {
+    _onChatMutation(event) {
         if(this._debug) {
             console.log("chat event", event)
         }
     }
-    onparticipant(event) {
+    _onParticipantMutation(event) {
         if(this._debug) {
             console.log("participant event", event)
+        }
+    }
+    _onTabhandsMutation(event) {
+        if(this._debug) {
+            console.log("tabhands event", event)
         }
     }
     _attachMain() {
@@ -92,14 +101,14 @@ class Meeting {
 
         this.reactions_node = this.grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
         if(!this.reactions_node) { throw new Error("reactions_node not found"); }
-        this.reactions_observer = new MutationObserver(this.onreaction.bind(this));
+        this.reactions_observer = new MutationObserver(this._onReactionMutation.bind(this));
         this.reactions_observer.observe(this.reactions_node, {
             childList: true
         });
 
         this.messages_node = document.querySelector('div[data-update-corner]')?.firstElementChild;
         if(!this.messages_node) { throw new Error("messages_node not found"); }
-        this.messages_observer = new MutationObserver(this.onmessage.bind(this));
+        this.messages_observer = new MutationObserver(this._onMessageMutation.bind(this));
         this.messages_observer.observe(this.messages_node, {
             childList: true
         });
@@ -133,8 +142,15 @@ class Meeting {
 
         this.participants_node = this.tab1_node.querySelector("div[role='list']");
         if(!this.participants_node) { throw new Error("participants_node not found"); }
-        this.participants_observer = new MutationObserver(this.onparticipant.bind(this));
+        this.participants_observer = new MutationObserver(this._onParticipantMutation.bind(this));
         this.participants_observer.observe(this.participants_node, {
+            childList: true
+        });
+
+        this.tabhands_node = this.tab1_node.querySelector("div[data-expanded-impression]")?.parentElement?.previousElementSibling;
+        if(!this.tabhands_node) { throw new Error("hands_node not found"); }
+        this.tabhands_observer = new MutationObserver(this._onTabhandsMutation.bind(this));
+        this.tabhands_observer.observe(this.tabhands_node, {
             childList: true
         });
 
@@ -162,13 +178,18 @@ class Meeting {
     _attachTab2() {
         this.tab2_node = document.querySelector("div[data-tab-id='2']");
         if(!this.tab2_node) { throw new Error("tab2_node not found"); }
+
         this.chat_node = this.tab2_node.querySelector("div[data-tv]");
         if(!this.chat_node) { throw new Error("chat_node not found"); }
-        this.chat_observer = new MutationObserver(this.onchat.bind(this));
+
+        this.chat_observer = new MutationObserver(this._onChatMutation.bind(this));
         this.chat_observer.observe(this.chat_node, {
-            childList: true
+            childList: true,
+            subtree: true
         });
+
         this._tab2attached = true;
+
         if(this._debug) {
             console.log("tab2 attached");
         }
@@ -242,24 +263,21 @@ class Participant {
         if(!this.name) {
             this.name = node.querySelector("div[jsslot] div[style]")?.textContent;
         }
-        if(!this.self) {
-            this.self = node.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
-        }
-        if(!this.avatar) {
-            this.avatar = node.querySelector("img")?.getAttribute("src");
-        }
 
-        this.mic_node = node.firstElementChild?.lastElementChild?.lastElementChild?.firstElementChild;
+        this.self = node.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
+        this.avatar = node.querySelector("img")?.getAttribute("src");
+
+        this.mic_node = node.querySelector("div[data-use-tooltip]");
         if(!this.mic_node) { throw new Error("mic_node not found"); }
-        this.mic_observer = new MutationObserver(this.onmic.bind(this));
+        this.mic_observer = new MutationObserver(this._onMicMutation.bind(this));
         this.mic_observer.observe(this.mic_node, {
             attributes: true,
             attributeFilter: ["class"]
         });
 
-        this.voice_node = this.mic_node?.firstChild;
+        this.voice_node = this.mic_node?.querySelector("div[jscontroller][class][jsname][jsaction]")
         if(!this.voice_node) { throw new Error("voice_node not found"); }
-        this.voice_observer = new MutationObserver(this.onvoice.bind(this));
+        this.voice_observer = new MutationObserver(this._onVoiceMutation.bind(this));
         this.voice_observer.observe(this.voice_node, {
             attributes: true,
             attributeFilter: ["class"]
@@ -267,18 +285,17 @@ class Participant {
 
         this.cam_node = node.querySelector("div[data-resolution-cap]");
         if(!this.cam_node) { throw new Error("cam_node not found"); }
-        this.cam_observer = new MutationObserver(this.oncam.bind(this));
+        this.cam_observer = new MutationObserver(this._onCamMutation.bind(this));
         this.cam_observer.observe(this.cam_node, {
             attributes: true,
             attributeFilter: ["class"]
         });
 
-        this.hand_node = this.cam_node?.firstChild?.firstChild;
+        this.hand_node = node.querySelector("div[data-self-name]")?.parentElement;
         if(!this.hand_node) { throw new Error("hand_node not found"); }
-        this.hand_observer = new MutationObserver(this.onhand.bind(this));
+        this.hand_observer = new MutationObserver(this._onHandMutation.bind(this));
         this.hand_observer.observe(this.hand_node, {
-            attributes: true,
-            attributeFilter: ["class"]
+            childList: true
         });
 
         this._mainattached = true;
@@ -296,7 +313,7 @@ class Participant {
 
         this.tabmic_node = node.querySelector("div[data-use-tooltip]");
         if(!this.tabmic_node) { throw new Error("mic_node not found"); }
-        this.tabmic_observer = new MutationObserver(this.ontabmic.bind(this));
+        this.tabmic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
         this.tabmic_observer.observe(this.tabmic_node, {
             attributes: true,
             attributeFilter: ["class"]
@@ -304,7 +321,7 @@ class Participant {
 
         this.tabvoice_node = this.tabmic_node?.lastElementChild;
         if(!this.tabvoice_node) { throw new Error("voice_node not found"); }
-        this.tabvoice_observer = new MutationObserver(this.ontabvoice.bind(this));
+        this.tabvoice_observer = new MutationObserver(this._onTabvoiceMutation.bind(this));
         this.tabvoice_observer.observe(this.tabvoice_node, {
             attributes: true,
             attributeFilter: ["class"]
@@ -334,22 +351,22 @@ class Participant {
         this.tabmic_node= null;
         this.tabvoice_node = null;
     }
-    onmic(event) {
+    _onMicMutation(event) {
         console.log("mic event", event)
     }
-    onvoice(event) {
+    _onVoiceMutation(event) {
         console.log("voice event", event)
     }
-    oncam(event) {
+    _onCamMutation(event) {
         console.log("cam event", event)
     }
-    onhand(event) {
+    _onHandMutation(event) {
         console.log("hand event", event)
     }
-    ontabmic(event) {
+    _onTabmicMutation(event) {
         console.log("tab mic event", event)
     }
-    ontabvoice(event) {
+    _onTabvoiceMutation(event) {
         console.log("tab voice event", event)
     }
 }
