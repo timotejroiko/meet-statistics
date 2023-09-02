@@ -3,50 +3,59 @@ class Meeting {
         /** @type {Map<string, Participant>} */ this.participants = new Map();
 
         this.grid_node = null;
+        this.grid_reactions_node = null;
+        this.grid_messages_node = null;
+        this.grid_reactions_observer = null;
+        this.grid_messages_observer = null;
+
         this.tab1_node = null;
+        this.tab1_hands_container_node = null;
+        this.tab1_hands_container_observer = null;
+        this.tab1_hands_list_node = null;
+        this.tab1_hands_list_observer = null;
+        this.tab1_hands_node = null;
+        this.tab1_hands_observer = null;
+        this.tab1_contributors_list_node = null;
+        this.tab1_contributors_list_observer = null;
+        this.tab1_contributors_node = null;
+        this.tab1_contributors_observer = null;
+
         this.tab2_node = null;
+        this.tab2_chat_node = null;
+        this.tab2_chat_observer = null;
 
-        this.reactions_node = null;
-        this.messages_node = null;
-        this.chat_node = null;
-        this.participants_node = null;
-        this.tabhands_node = null;
-        this.tabhands2_node = null;
-
-        this.reactions_observer = null;
-        this.messages_observer = null;
-        this.chat_observer = null;
-        this.participants_observer = null;
-        this.tabhands_observer = null;
-        this.tabhands2_observer = null;
-
-        this._mainattached = false;
-        this._tab1attached = false;
-        this._tab2attached = false;
+        this._main_attached = false;
+        this._tab1_attached = false;
+        this._tab1_hands_list_attached = false;
+        this._tab1_hands_attached = false;
+        this._tab1_contributors_attached = false;
+        this._tab2_attached = false;
         this._interval = -1;
         this._debug = true;
     }
+
     get active() {
         return this._interval > -1;
     }
+
     start() {
         this._interval = setInterval(() => {
             const main = document.querySelector("div[data-participant-id]:not([role])");
-            if(this._mainattached && !main) {
+            if(this._main_attached && !main) {
                 this._detachMain();
-            } else if(main && !this._mainattached) {
+            } else if(main && !this._main_attached) {
                 this._attachMain();
             }
             const tab1 = document.querySelector("div[data-tab-id='1']");
-            if(this._tab1attached && !tab1) {
+            if(this._tab1_attached && !tab1) {
                 this._detachTab1();
-            } else if(tab1 && !this._tab1attached) {
+            } else if(tab1 && !this._tab1_attached) {
                 this._attachTab1();
             }
             const tab2 = document.querySelector("div[data-tab-id='2']");
-            if(this._tab2attached && !tab2) {
+            if(this._tab2_attached && !tab2) {
                 this._detachTab2();
-            } else if(tab2 && !this._tab2attached) {
+            } else if(tab2 && !this._tab2_attached) {
                 this._attachTab2();
             }
         }, 1000);
@@ -54,62 +63,126 @@ class Meeting {
             console.log("monitoring started");
         }
     }
+
     stop() {
         clearInterval(this._interval);
         this._interval = -1;
-        if(this._mainattached) {
+        if(this._main_attached) {
             this._detachMain();
         }
-        if(this._tab1attached) {
+        if(this._tab1_attached) {
             this._detachTab1();
         }
-        if(this._tab2attached) {
+        if(this._tab2_attached) {
             this._detachTab2();
         }
         if(this._debug) {
             console.log("monitoring stopped");
         }
     }
+
+    /**
+     * @param {MutationRecord[]} event 
+     */
     _onReactionMutation(event) {
         if(this._debug) {
             console.log("reaction event", event)
         }
     }
+
+    /**
+     * @param {MutationRecord[]} event 
+     */
     _onMessageMutation(event) {
         if(this._debug) {
             console.log("message event", event)
         }
     }
+
+    /**
+     * @param {MutationRecord[]} event 
+     */
     _onChatMutation(event) {
         if(this._debug) {
             console.log("chat event", event)
         }
     }
-    _onParticipantMutation(event) {
+
+    /**
+     * @param {MutationRecord[]} event 
+     */
+    _onTab1HandsContainerMutation([event]) {
         if(this._debug) {
-            console.log("participant event", event)
+            console.log("tab1 hands container event", event)
+        }
+        if(event.addedNodes.length && !event.removedNodes.length) {
+            this._attachTab1HandsList();
+        } else if(event.removedNodes.length && !event.addedNodes.length) {
+            this._detachTab1HandsList();
         }
     }
-    _onTabhandsMutation(event) {
+
+    /**
+     * @param {MutationRecord[]} event 
+     */
+    _onTab1HandsListMutation([event]) {
         if(this._debug) {
-            console.log("tabhands event", event)
+            console.log("tab1 hands list event", event)
+        }
+        if(/** @type {Element} */ (event.target).classList.length > 1) {
+            this._attachTab1Hands();
+        } else {
+            this._detachTab1Hands();
         }
     }
+
+    /**
+     * @param {MutationRecord[]} event 
+     */
+    _onTab1HandsMutation(event) {
+        if(this._debug) {
+            console.log("tab1 hand event", event)
+        }
+    }
+
+    /**
+     * @param {MutationRecord[]} event 
+     */
+    _onTab1ContributorsListMutation([event]) {
+        if(this._debug) {
+            console.log("tab1 contributor list event", event)
+        }
+        if(/** @type {Element} */ (event.target).classList.length > 1) {
+            this._attachTab1Contributors();
+        } else {
+            this._detachTab1Contributors();
+        }
+    }
+
+    /**
+     * @param {MutationRecord} event 
+     */
+    _onTab1ContributorsMutation(event) {
+        if(this._debug) {
+            console.log("tab1 contributor event", event)
+        }
+    }
+
     _attachMain() {
         this.grid_node = document.querySelector("div[data-participant-id]:not([role])")?.parentElement?.parentElement;
         if(!this.grid_node) { throw new Error("grid_node not found"); }
 
-        this.reactions_node = this.grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
-        if(!this.reactions_node) { throw new Error("reactions_node not found"); }
-        this.reactions_observer = new MutationObserver(this._onReactionMutation.bind(this));
-        this.reactions_observer.observe(this.reactions_node, {
+        this.grid_reactions_node = this.grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
+        if(!this.grid_reactions_node) { throw new Error("reactions_node not found"); }
+        this.grid_reactions_observer = new MutationObserver(this._onReactionMutation.bind(this));
+        this.grid_reactions_observer.observe(this.grid_reactions_node, {
             childList: true
         });
 
-        this.messages_node = document.querySelector('div[data-update-corner]')?.firstElementChild;
-        if(!this.messages_node) { throw new Error("messages_node not found"); }
-        this.messages_observer = new MutationObserver(this._onMessageMutation.bind(this));
-        this.messages_observer.observe(this.messages_node, {
+        this.grid_messages_node = document.querySelector('div[data-update-corner]')?.firstElementChild;
+        if(!this.grid_messages_node) { throw new Error("messages_node not found"); }
+        this.grid_messages_observer = new MutationObserver(this._onMessageMutation.bind(this));
+        this.grid_messages_observer.observe(this.grid_messages_node, {
             childList: true
         });
 
@@ -130,31 +203,149 @@ class Meeting {
             }
         }
 
-        this._mainattached = true;
+        this._main_attached = true;
 
         if(this._debug) {
             console.log("main attached");
         }
     }
+
+    _detachMain() {
+        this.grid_reactions_observer?.disconnect();
+        this.grid_messages_observer?.disconnect();
+        this.grid_reactions_observer = null;
+        this.grid_messages_observer = null;
+        this.grid_reactions_node = null;
+        this.grid_messages_node = null;
+        this._main_attached = false;
+        this.participants.forEach(participant => participant.detachMain());
+        if(this._debug) {
+            console.log("main detached");
+        }
+    }
+
     _attachTab1() {
         this.tab1_node = document.querySelector("div[data-tab-id='1']");
         if(!this.tab1_node) { throw new Error("tab1_node not found"); }
 
-        this.participants_node = this.tab1_node.querySelector("div[role='list']");
-        if(!this.participants_node) { throw new Error("participants_node not found"); }
-        this.participants_observer = new MutationObserver(this._onParticipantMutation.bind(this));
-        this.participants_observer.observe(this.participants_node, {
+        this.tab1_hands_container_node = this.tab1_node.querySelectorAll("h2")[1].nextElementSibling;
+        if(!this.tab1_hands_container_node) { throw new Error("tab1_hands_node not found"); }
+        this.tab1_hands_container_observer = new MutationObserver(this._onTab1HandsContainerMutation.bind(this));
+        this.tab1_hands_container_observer.observe(this.tab1_hands_container_node, {
             childList: true
         });
 
-        this.tabhands_node = this.tab1_node.querySelector("div[data-expanded-impression]")?.parentElement?.previousElementSibling;
-        if(!this.tabhands_node) { throw new Error("hands_node not found"); }
-        this.tabhands_observer = new MutationObserver(this._onTabhandsMutation.bind(this));
-        this.tabhands_observer.observe(this.tabhands_node, {
+        this.tab1_contributors_list_node = this.tab1_hands_container_node.nextElementSibling?.firstElementChild;
+        if(!this.tab1_contributors_list_node) { throw new Error("tab1_contributors_list_node not found"); }
+        this.tab1_contributors_list_observer = new MutationObserver(this._onTab1ContributorsListMutation.bind(this));
+        this.tab1_contributors_list_observer.observe(this.tab1_contributors_list_node, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+
+        this._tab1_attached = true;
+
+        if(this._debug) {
+            console.log("tab1 attached");
+        }
+
+        if(this.tab1_hands_container_node.firstElementChild) {
+            this._attachTab1HandsList();
+        }
+
+        if(this.tab1_contributors_list_node.classList.length > 1) {
+            this._attachTab1Contributors();
+        }
+    }
+
+    _detachTab1() {
+        this._detachTab1HandsList();
+        this._detachTab1Contributors();
+        this.tab1_hands_container_observer?.disconnect();
+        this.tab1_contributors_list_observer?.disconnect();
+        this.tab1_contributors_list_node = null;
+        this.tab1_node = null;
+        this._tab1_attached = false;
+        this.participants.forEach(participant => participant.detachTab());
+        if(this._debug) {
+            console.log("tab1 detached");
+        }
+    }
+
+    _attachTab1HandsList() {
+        this.tab1_hands_list_node = this.tab1_hands_container_node?.firstElementChild;
+        if(!this.tab1_hands_list_node) { throw new Error("hands_node not found"); }
+
+        this.tab1_hands_list_observer = new MutationObserver(this._onTab1HandsListMutation.bind(this));
+        this.tab1_hands_list_observer.observe(this.tab1_hands_list_node, {
+            attributes: true,
+            attributeFilter: ["class"]
+        });
+
+        this._tab1_hands_list_attached = true;
+
+        if(this._debug) {
+            console.log("tab1 hands list attached");
+        }
+
+        if(this.tab1_hands_list_node.classList.length > 1) {
+            this._attachTab1Hands();
+        }
+    }
+
+    _detachTab1HandsList() {
+        this._detachTab1Hands();
+        this.tab1_hands_list_observer?.disconnect();
+        this.tab1_hands_list_node = null;
+        this._tab1_hands_list_attached = false;
+
+        if(this._debug) {
+            console.log("tab1 hands list detached");
+        }
+    }
+
+    _attachTab1Hands() {
+        this.tab1_hands_node = this.tab1_hands_list_node?.querySelector("div[role='list']");
+        if(!this.tab1_hands_node) { throw new Error("hands_node not found"); }
+        this.hands_observer = new MutationObserver(this._onTab1HandsMutation.bind(this));
+        this.hands_observer.observe(this.tab1_hands_node, {
             childList: true
         });
 
-        for(const node of this.participants_node.children) {
+        this._tab1_hands_attached = true;
+
+        if(this._debug) {
+            console.log("tab1 hands attached");
+        }
+    }
+
+    _detachTab1Hands() {
+        this.hands_observer?.disconnect();
+        this.tab1_hands_node = null;
+        this._tab1_hands_attached = false;
+
+        if(this._debug) {
+            console.log("tab1 hands detached");
+        }
+    }
+
+    _attachTab1Contributors() {
+
+        this.tab1_contributors_node = this.tab1_contributors_list_node?.querySelector("div[role='list']");
+        if(!this.tab1_contributors_node) { throw new Error("contributors_node not found"); }
+        this.contributors_observer = new MutationObserver(this._onTab1ContributorsMutation.bind(this));
+        this.contributors_observer.observe(this.tab1_contributors_node, {
+            childList: true
+        });
+
+        this._tab1_contributors_attached = true;
+
+        if(this._debug) {
+            console.log("tab1 contributors attached");
+        }
+
+        /*
+        for(const node of this.tab1_contributors_list_node.children) {
             const id = node.getAttribute("data-participant-id");
             if(!id) { throw new Error("id not found"); }
             const existing = this.participants.get(id);
@@ -168,62 +359,45 @@ class Meeting {
                 this.participants.set(id, participant);
             }
         }
+        */
+    }
 
-        this._tab1attached = true;
-
+    _detachTab1Contributors() {
+        this.contributors_observer?.disconnect();
+        this.tab1_contributors_node = null;
+        this._tab1_contributors_attached = false;
+        
         if(this._debug) {
-            console.log("tab1 attached");
+            console.log("tab1 contributors detached");
         }
     }
+
     _attachTab2() {
         this.tab2_node = document.querySelector("div[data-tab-id='2']");
         if(!this.tab2_node) { throw new Error("tab2_node not found"); }
 
-        this.chat_node = this.tab2_node.querySelector("div[data-tv]");
-        if(!this.chat_node) { throw new Error("chat_node not found"); }
+        this.tab2_chat_node = this.tab2_node.querySelector("div[data-tv]");
+        if(!this.tab2_chat_node) { throw new Error("chat_node not found"); }
 
-        this.chat_observer = new MutationObserver(this._onChatMutation.bind(this));
-        this.chat_observer.observe(this.chat_node, {
+        this.tab2_chat_observer = new MutationObserver(this._onChatMutation.bind(this));
+        this.tab2_chat_observer.observe(this.tab2_chat_node, {
             childList: true,
             subtree: true
         });
 
-        this._tab2attached = true;
+        this._tab2_attached = true;
 
         if(this._debug) {
             console.log("tab2 attached");
         }
     }
-    _detachMain() {
-        this.reactions_observer?.disconnect();
-        this.messages_observer?.disconnect();
-        this.reactions_observer = null;
-        this.messages_observer = null;
-        this.reactions_node = null;
-        this.messages_node = null;
-        this._mainattached = false;
-        this.participants.forEach(participant => participant.detachMain());
-        if(this._debug) {
-            console.log("main detached");
-        }
-    }
-    _detachTab1() {
-        this.participants_observer?.disconnect();
-        this.participants_observer = null;
-        this.participants_node = null;
-        this.tab1_node = null;
-        this._tab1attached = false;
-        this.participants.forEach(participant => participant.detachTab());
-        if(this._debug) {
-            console.log("tab1 detached");
-        }
-    }
+
     _detachTab2() {
-        this.chat_observer?.disconnect();
-        this.chat_observer = null;
-        this.chat_node = null;
+        this.tab2_chat_observer?.disconnect();
+        this.tab2_chat_observer = null;
+        this.tab2_chat_node = null;
         this.tab2_node = null;
-        this._tab2attached = false;
+        this._tab2_attached = false;
         if(this._debug) {
             console.log("tab2 detached");
         }
