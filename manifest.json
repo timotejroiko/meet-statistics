@@ -1,0 +1,25 @@
+{
+	"name": "Meet Statistics",
+	"description": "Track participant engagement by monitoring their message, reaction, hands up, camera and microphone activity",
+	"version": "0.1",
+	"manifest_version": 3,
+	"action": {
+		"default_popup": "popup/index.html",
+		"default_icon": "popup/icon.png"
+	},
+	"options_page": "options/index.html",
+	"permissions": ["storage", "tabs"],
+	"content_scripts": [
+		{
+			"js": [
+				"script/Participant.js",
+				"script/Meeting.js",
+				"script/index.js"
+			],
+			"matches": [
+				"*://meet.google.com/*-*-*"
+			],
+			"run_at": "document_start"
+		}
+	]
+}
