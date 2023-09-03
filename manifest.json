@@ -19,8 +19,7 @@
 			],
 			"matches": [
 				"*://meet.google.com/*-*-*"
-			],
-			"run_at": "document_start"
+			]
 		}
 	]
 }

@@ -37,7 +37,7 @@ class Meeting {
 		this._tab1_hands_attached = false;
 		this._tab1_contributors_attached = false;
 		this._tab2_attached = false;
-		this._debug = Boolean(options.debug);
+		this._debug = true;
 	}
 	
 	get active() {
@@ -117,7 +117,7 @@ class Meeting {
 				if(!id) { continue; }
 				const existing = this.participants.get(id);
 				if(existing) {
-					if(!existing._mainattached) {
+					if(!existing._main_attached) {
 						existing.attachMain(node);
 					}
 				} else {
@@ -127,17 +127,25 @@ class Meeting {
 				}
 			}
 		}
+
+		if(this._grid_node.lastElementChild?.previousElementSibling?.firstElementChild) {
+			const selfmic = this._grid_node.lastElementChild?.previousElementSibling?.firstElementChild.querySelector("div[data-use-tooltip]")?.parentElement
+			// TODO attach miniself
+		}
 	}
 	
 	_detachMain() {
 		this._grid_reactions_observer?.disconnect();
-		this._grid_messages_observer?.disconnect();
 		this._grid_reactions_observer = null;
-		this._grid_messages_observer = null;
 		this._grid_reactions_node = null;
+
+		this._grid_messages_observer?.disconnect();
+		this._grid_messages_observer = null;
 		this._grid_messages_node = null;
-		this._main_attached = false;
+
 		this.participants.forEach(participant => participant.detachMain());
+		this._main_attached = false;
+		
 		if(this._debug) {
 			console.log("main detached");
 		}
@@ -180,12 +188,17 @@ class Meeting {
 	_detachTab1() {
 		this._detachTab1HandsList();
 		this._detachTab1Contributors();
+
 		this._tab1_hands_container_observer?.disconnect();
+		this._tab1_hands_container_observer = null;
+
 		this._tab1_contributors_list_observer?.disconnect();
+		this._tab1_contributors_list_observer = null;
 		this._tab1_contributors_list_node = null;
+
 		this._tab1_node = null;
 		this._tab1_attached = false;
-		this.participants.forEach(participant => participant.detachTab());
+		
 		if(this._debug) {
 			console.log("tab1 detached");
 		}
@@ -214,8 +227,11 @@ class Meeting {
 	
 	_detachTab1HandsList() {
 		this._detachTab1Hands();
+
 		this._tab1_hands_list_observer?.disconnect();
+		this._tab1_hands_list_observer = null;
 		this._tab1_hands_list_node = null;
+
 		this._tab1_hands_list_attached = false;
 		
 		if(this._debug) {
@@ -226,8 +242,8 @@ class Meeting {
 	_attachTab1Hands() {
 		this._tab1_hands_node = this._tab1_hands_list_node?.querySelector("div[role='list']");
 		if(!this._tab1_hands_node) { throw new Error("hands_node not found"); }
-		this.hands_observer = new MutationObserver(this._onTab1HandsMutation.bind(this));
-		this.hands_observer.observe(this._tab1_hands_node, {
+		this._tab1_hands_observer = new MutationObserver(this._onTab1HandsMutation.bind(this));
+		this._tab1_hands_observer.observe(this._tab1_hands_node, {
 			childList: true
 		});
 		
@@ -239,8 +255,10 @@ class Meeting {
 	}
 	
 	_detachTab1Hands() {
-		this.hands_observer?.disconnect();
+		this._tab1_hands_observer?.disconnect();
+		this._tab1_hands_observer = null;
 		this._tab1_hands_node = null;
+
 		this._tab1_hands_attached = false;
 		
 		if(this._debug) {
@@ -252,8 +270,8 @@ class Meeting {
 		
 		this._tab1_contributors_node = this._tab1_contributors_list_node?.querySelector("div[role='list']");
 		if(!this._tab1_contributors_node) { throw new Error("contributors_node not found"); }
-		this.contributors_observer = new MutationObserver(this._onTab1ContributorsMutation.bind(this));
-		this.contributors_observer.observe(this._tab1_contributors_node, {
+		this._tab1_contributors_observer = new MutationObserver(this._onTab1ContributorsMutation.bind(this));
+		this._tab1_contributors_observer.observe(this._tab1_contributors_node, {
 			childList: true
 		});
 		
@@ -268,7 +286,7 @@ class Meeting {
 			if(!id) { throw new Error("id not found"); }
 			const existing = this.participants.get(id);
 			if(existing) {
-				if(!existing._tabattached) {
+				if(!existing._tab_attached) {
 					existing.attachTab(node);
 				}
 			} else {
@@ -280,8 +298,11 @@ class Meeting {
 	}
 	
 	_detachTab1Contributors() {
-		this.contributors_observer?.disconnect();
+		this._tab1_contributors_observer?.disconnect();
+		this._tab1_contributors_observer = null;
 		this._tab1_contributors_node = null;
+
+		this.participants.forEach(participant => participant.detachTab());
 		this._tab1_contributors_attached = false;
 		
 		if(this._debug) {
@@ -313,8 +334,10 @@ class Meeting {
 		this._tab2_chat_observer?.disconnect();
 		this._tab2_chat_observer = null;
 		this._tab2_chat_node = null;
+
 		this._tab2_node = null;
 		this._tab2_attached = false;
+		
 		if(this._debug) {
 			console.log("tab2 detached");
 		}
@@ -405,5 +428,6 @@ class Meeting {
 		if(this._debug) {
 			console.log("tab1 contributor event", event)
 		}
+
 	}
 }
