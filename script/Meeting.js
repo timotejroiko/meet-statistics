@@ -1,12 +1,12 @@
 class Meeting {
 	/**
-	 * @param {{
-	 * 		debug?: boolean
-	 * }} options 
+	 * @param {Awaited<ReturnType<typeof Store.findOrCreateMeeting>>} info
+	 * @param {typeof Store.defaultOptions} options 
 	 */
-	constructor(options) {
-		this.options = options;
+	constructor(info, options) {
 		/** @type {Map<string, Participant>} */ this.participants = new Map();
+		this.info = info;
+		this.options = options;
 		
 		this._grid_node = null;
 		this._grid_reactions_node = null;
@@ -37,11 +37,14 @@ class Meeting {
 		this._tab1_hands_attached = false;
 		this._tab1_contributors_attached = false;
 		this._tab2_attached = false;
-		this._debug = true;
 	}
 	
 	get active() {
 		return this._interval > -1;
+	}
+
+	get _debug() {
+		return this.options.debug;
 	}
 	
 	start() {
@@ -64,6 +67,7 @@ class Meeting {
 			} else if(tab2 && !this._tab2_attached) {
 				this._attachTab2();
 			}
+			this.syncData().catch(console.error);
 		}, 1000);
 		if(this._debug) {
 			console.log("monitoring started");
@@ -85,6 +89,34 @@ class Meeting {
 		if(this._debug) {
 			console.log("monitoring stopped");
 		}
+	}
+
+	async syncData() {
+		return;
+		let obj = await Store.getData(this.id);
+		if(!obj) {
+			obj = {
+				id: this.id,
+				hash: this.hash,
+				title: this.title,
+				participants: []
+			}
+		}
+
+		this.participants.forEach(participant => {
+			let existing = obj.participants.find(x => x.name === participant.name && x.avatar === participant.avatar);
+			if(!existing) {
+				existing = {
+
+					name: participant.name,
+					subname: participant.subname,
+					avatar: participant.avatar
+				}
+				obj.participants.push(existing);
+			}
+		});
+
+		await Store.setData(`${this.id}-${this.hash}`, obj);
 	}
 	
 	_attachMain() {
@@ -337,7 +369,7 @@ class Meeting {
 
 		this._tab2_node = null;
 		this._tab2_attached = false;
-		
+
 		if(this._debug) {
 			console.log("tab2 detached");
 		}

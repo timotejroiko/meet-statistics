@@ -8,6 +8,14 @@ class Participant {
 		this.subname = null;
 		this.self = null;
 		this.avatar = null;
+		this.data = {
+			reactions: [],
+			messages: [],
+			hands: [],
+			mic: [],
+			voice: [],
+			cam: []
+		};
 		
 		this._mic_node = null;
 		this._mic_observer = null;
