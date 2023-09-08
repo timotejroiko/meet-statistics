@@ -92,31 +92,44 @@ class Meeting {
 	}
 
 	async syncData() {
-		return;
-		let obj = await Store.getData(this.id);
-		if(!obj) {
-			obj = {
-				id: this.id,
-				hash: this.hash,
-				title: this.title,
-				participants: []
-			}
-		}
-
+		const existing = await Store.listMeetingParticipants(this.info.dataId);
+		let changed = false;
 		this.participants.forEach(participant => {
-			let existing = obj.participants.find(x => x.name === participant.name && x.avatar === participant.avatar);
-			if(!existing) {
-				existing = {
-
-					name: participant.name,
-					subname: participant.subname,
-					avatar: participant.avatar
+			const hash = participant.hash || (participant.hash = Store.hash(`${participant.name}-${participant.avatar}`));
+			const old = existing.find(x => x.dataId === hash);
+			if(old) {
+				if(participant.subname && old.subname !== participant.subname) {
+					old.subname = participant.subname;
+					changed = true;
 				}
-				obj.participants.push(existing);
+				if(participant.self && old.self !== participant.self) {
+					old.self = participant.self;
+					changed = true;
+				}
+			} else {
+				existing.push({
+					name: participant.name || "",
+					avatar: participant.avatar || "",
+					subname: participant.subname || "",
+					self: participant.self || "",
+					dataId: hash
+				});
+				changed = true;
 			}
+
+			(async () => {
+				if(participant.events.length) {
+					const data = await Store.getParticipantData(this.info.dataId, hash);
+					data.push(...participant.events);
+					participant.events.length = 0;
+					await Store.updateParticipantData(this.info.dataId, hash, data);
+				}
+			})().catch(console.error);
 		});
 
-		await Store.setData(`${this.id}-${this.hash}`, obj);
+		if(changed) {
+			Store.updateParticipants(this.info.dataId, existing);
+		}
 	}
 	
 	_attachMain() {

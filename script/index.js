@@ -1,6 +1,5 @@
 (async () => {
-	let options = await Store.getOptions();
-
+	const options = await Store.getOptions();
 	const title = document.title;
 	const id = location.pathname.slice(1);
 	const info = await Store.findOrCreateMeeting(id, title, true);
