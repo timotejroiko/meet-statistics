@@ -121,6 +121,8 @@ class Store {
 	 * 		subname: string,
 	 * 		self: string,
 	 * 		avatar: string,
+	 * 		firstSeen: number,
+	 * 		lastSeen: number,
 	 * 		dataId: string
 	 * }[]} data 
 	 */
@@ -141,7 +143,7 @@ class Store {
 		const id = `${meetingId}-${participantId}`;
 		// @ts-ignore
 		const data = await chrome.storage.local.get(id);
-		return data[id] || {};
+		return data[id] || [];
 	}
 
 	/**
@@ -165,7 +167,9 @@ class Store {
 	 * @param {string} meetingId 
 	 * @param {string} participantId 
 	 * @param {{
-	 * 		type: string
+	 * 		type: string,
+	 * 		time: number,
+	 * 		action: string
 	 * }[]} data 
 	 * @returns 
 	 */

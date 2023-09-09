@@ -1,14 +1,16 @@
 class Participant {
 	/**
 	 * @param {string} id 
+	 * @param {Meeting} meeting 
 	 */
-	constructor(id) {
+	constructor(id, meeting) {
 		this.id = id;
 		this.name = null;
 		this.subname = null;
 		this.self = null;
 		this.avatar = null;
-		
+
+		this.meeting = meeting;
 		this.events = [];
 		this.hash = "";
 		
@@ -28,7 +30,12 @@ class Participant {
 		this._main_attached = false;
 		this._tab_attached = false;
 		this._notself_voice_attached = false;
-		this._debug = true;
+		this._mic_status = false;
+		this._voice_status = -1;
+	}
+
+	get _debug() {
+		return this.meeting._debug;
 	}
 	
 	/**
@@ -50,6 +57,8 @@ class Participant {
 			attributes: true,
 			attributeFilter: ["class"]
 		});
+
+		this._mic_status = this._mic_node.classList.length === 2;
 		
 		this._voice_node = this._mic_node?.querySelector("div[jscontroller][class][jsname][jsaction]")
 		if(!this._voice_node) { throw new Error("voice_node not found"); }
@@ -125,6 +134,8 @@ class Participant {
 				attributeFilter: ["class"]
 			});
 
+			this._mic_status = this._tab_mic_node.classList.length === 1;
+
 			this._tab_voice_node = this._tab_mic_node?.lastElementChild;
 			if(!this._tab_voice_node) { throw new Error("tabvoice_node not found"); }
 			this._tab_voice_observer = new MutationObserver(this._onTabvoiceMutation.bind(this));
@@ -148,6 +159,7 @@ class Participant {
 		}
 
 		if(!selfmic && this._tab_mic_node.querySelector("i")?.parentElement?.classList.length === 2) {
+			this._mic_status = true;
 			this.attachTabNotselfVoice();
 		}
 	}
@@ -193,38 +205,78 @@ class Participant {
 	}
 	
 	/**
-	 * @param {MutationRecord[]} event 
+	 * @param {(MutationRecord & { target: Element })[]} event 
 	 */
 	_onMicMutation(event) {
-		console.log("mic event", event)
+		if(this._debug) {
+			console.log("mic event", event);
+		}
+		this._mic_status = event[0].target.classList.length === 2;
+		this.events.push({
+			time: Date.now(),
+			type: "mic",
+			action: this._mic_status ? "enabled" : "disabled"
+		});
 	}
 	
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
 	_onVoiceMutation(event) {
-		console.log("voice event", event)
+		if(this._debug) {
+			console.log("voice event", event);
+		}
+		if(this._mic_status) {
+			if(this._voice_status > -1) {
+				clearTimeout(this._voice_status);
+			} else {
+				this.events.push({
+					time: Date.now(),
+					type: "voice",
+					action: "start"
+				});
+			}
+			this._voice_status = setTimeout(() => {
+				this._voice_status = -1;
+				this.events.push({
+					time: Date.now(),
+					type: "voice",
+					action: "stop"
+				});
+			}, 1000);
+		}
 	}
 	
 	/**
-	 * @param {MutationRecord[]} event 
+	 * @param {(MutationRecord & { target: Element })[]} event 
 	 */
 	_onCamMutation(event) {
-		console.log("cam event", event)
+		if(this._debug) {
+			console.log("cam event", event);
+		}
+		this.events.push({
+			time: Date.now(),
+			type: "cam",
+			action: event[0].target.classList.length === 2 ? "closed" : "opened"
+		});
 	}
 	
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
 	_onHandMutation(event) {
-		console.log("hand event", event)
+		if(this._debug) {
+			console.log("hand event", event);
+		}
 	}
 	
 	/**
-	 * @param {MutationRecord[]} event 
+	 * @param {(MutationRecord & { target: Element })[]} event 
 	 */
 	_onTabmicMutation(event) {
-		console.log("tab mic event", event)
+		if(this._debug) {
+			console.log("tab mic event", event);
+		}
 		if(event[0].type === "childList") {
 			if(this._tab_mic_node?.querySelector("i")?.parentElement?.classList.length === 2) {
 				this.attachTabNotselfVoice();
@@ -232,7 +284,15 @@ class Participant {
 				this.detachTabNotselfVoice();
 			}
 		} else {
-
+			if(this._mic_observer) {
+				return;
+			}
+			this._mic_status = event[0].target.classList.length === 1;
+			this.events.push({
+				time: Date.now(),
+				type: "mic",
+				action: this._mic_status ? "enabled" : "disabled"
+			});
 		}
 	}	
 	
@@ -240,6 +300,30 @@ class Participant {
 	 * @param {MutationRecord[]} event 
 	 */
 	_onTabvoiceMutation(event) {
-		console.log("tab voice event", event)
+		if(this._debug) {
+			console.log("tab voice event", event);
+		}
+		if(this._main_attached) {
+			return;
+		}
+		if(this._mic_status) {
+			if(this._voice_status > -1) {
+				clearTimeout(this._voice_status);
+			} else {
+				this.events.push({
+					time: Date.now(),
+					type: "voice",
+					action: "start"
+				});
+			}
+			this._voice_status = setTimeout(() => {
+				this._voice_status = -1;
+				this.events.push({
+					time: Date.now(),
+					type: "voice",
+					action: "stop"
+				});
+			}, 1000);
+		}
 	}
 }

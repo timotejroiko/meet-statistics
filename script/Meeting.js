@@ -67,6 +67,7 @@ class Meeting {
 			} else if(tab2 && !this._tab2_attached) {
 				this._attachTab2();
 			}
+			// dont wanna deal with background process and messaging, so we just sync every second lol
 			this.syncData().catch(console.error);
 		}, 1000);
 		if(this._debug) {
@@ -92,29 +93,36 @@ class Meeting {
 	}
 
 	async syncData() {
+		const now = Date.now();
+		const list = await Store.listMeetings();
+		const meeting = list.find(x => x.dataId === this.info.dataId);
+		if(meeting) {
+			meeting.lastSeen = now;
+			// @ts-ignore
+			await chrome.storage.local.set({ list });
+		}
 		const existing = await Store.listMeetingParticipants(this.info.dataId);
-		let changed = false;
 		this.participants.forEach(participant => {
 			const hash = participant.hash || (participant.hash = Store.hash(`${participant.name}-${participant.avatar}`));
 			const old = existing.find(x => x.dataId === hash);
 			if(old) {
 				if(participant.subname && old.subname !== participant.subname) {
 					old.subname = participant.subname;
-					changed = true;
 				}
 				if(participant.self && old.self !== participant.self) {
 					old.self = participant.self;
-					changed = true;
 				}
+				old.lastSeen = now;
 			} else {
 				existing.push({
 					name: participant.name || "",
 					avatar: participant.avatar || "",
 					subname: participant.subname || "",
 					self: participant.self || "",
+					firstSeen: now,
+					lastSeen: now,
 					dataId: hash
 				});
-				changed = true;
 			}
 
 			(async () => {
@@ -126,10 +134,8 @@ class Meeting {
 				}
 			})().catch(console.error);
 		});
-
-		if(changed) {
-			Store.updateParticipants(this.info.dataId, existing);
-		}
+		Store.updateParticipants(this.info.dataId, existing);
+		this.options = await Store.getOptions();
 	}
 	
 	_attachMain() {
@@ -166,7 +172,7 @@ class Meeting {
 						existing.attachMain(node);
 					}
 				} else {
-					const participant = new Participant(id);
+					const participant = new Participant(id, this);
 					participant.attachMain(node);
 					this.participants.set(id, participant);
 				}
@@ -200,13 +206,13 @@ class Meeting {
 		this._tab1_node = document.querySelector("div[data-tab-id='1']");
 		if(!this._tab1_node) { throw new Error("tab1_node not found"); }
 		
-		this._tab1_hands_container_node = this._tab1_node.querySelectorAll("h2")[1].nextElementSibling;
+		this._tab1_hands_container_node = this._tab1_node.querySelector(":scope > div > div > h2")?.nextElementSibling;
 		if(!this._tab1_hands_container_node) { throw new Error("tab1_hands_node not found"); }
 		this._tab1_hands_container_observer = new MutationObserver(this._onTab1HandsContainerMutation.bind(this));
 		this._tab1_hands_container_observer.observe(this._tab1_hands_container_node, {
 			childList: true
 		});
-		
+
 		this._tab1_contributors_list_node = this._tab1_hands_container_node.nextElementSibling?.firstElementChild;
 		if(!this._tab1_contributors_list_node) { throw new Error("tab1_contributors_list_node not found"); }
 		this._tab1_contributors_list_observer = new MutationObserver(this._onTab1ContributorsListMutation.bind(this));
@@ -335,7 +341,7 @@ class Meeting {
 					existing.attachTab(node);
 				}
 			} else {
-				const participant = new Participant(id);
+				const participant = new Participant(id, this);
 				participant.attachTab(node);
 				this.participants.set(id, participant);
 			}

@@ -7,7 +7,7 @@
         }
     }
 
-    const elem = document.createElement("code");
+    const elem = document.createElement("pre");
     elem.innerText = JSON.stringify(list, null, "\t");
     document.body.appendChild(elem);
 })()
