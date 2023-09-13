@@ -1,3 +1,20 @@
+/*
+
+data structure pseudocode:
+
+chrome.storage.sync = AsyncMap<{
+	meet_options: object
+}>
+
+chrome.storage.local = AsyncMap<{
+	list: Array<MeetingObject>
+	[meeting_id]: Array<ParticipantObject>
+	[meeting_id-participant_id]: Array<EventsObject>
+}>
+
+*/
+
+
 class Store {
 	static defaultOptions = {
 		debug: false,
@@ -12,7 +29,7 @@ class Store {
 	}
 
 	/**
-	 * DJB2 hash
+	 * DJB2 hash, not the best but simple and fast
 	 * @param {string} str 
 	 */
 	static hash(str) {
@@ -21,7 +38,7 @@ class Store {
 		for (let i = 0; i < len; i++) {
 			h = h * 33 ^ str.charCodeAt(i);
 		}
-		return (h >>> 0).toString();
+		return (h >>> 0).toString(36);
 	}
 
 	/**
