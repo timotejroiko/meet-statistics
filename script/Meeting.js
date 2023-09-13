@@ -2,11 +2,13 @@ class Meeting {
 	/**
 	 * @param {Awaited<ReturnType<typeof Store.findOrCreateMeeting>>} info
 	 * @param {typeof Store.defaultOptions} options 
+	 * @param {typeof Store} store 
 	 */
-	constructor(info, options) {
+	constructor(info, options, store) {
 		/** @type {Map<string, Participant>} */ this.participants = new Map();
 		this.info = info;
 		this.options = options;
+		this.store = store;
 		
 		this._grid_node = null;
 		this._grid_reactions_node = null;
@@ -94,16 +96,32 @@ class Meeting {
 
 	async syncData() {
 		const now = Date.now();
-		const list = await Store.listMeetings();
+		const list = await this.store.listMeetings();
 		const meeting = list.find(x => x.dataId === this.info.dataId);
 		if(meeting) {
 			meeting.lastSeen = now;
 			// @ts-ignore
 			await chrome.storage.local.set({ list });
 		}
-		const existing = await Store.listMeetingParticipants(this.info.dataId);
+		const existing = await this.store.listMeetingParticipants(this.info.dataId);
 		this.participants.forEach(participant => {
-			const hash = participant.hash || (participant.hash = Store.hash(`${participant.name}-${participant.avatar}`));
+			let hash = participant.hash;
+			if(!hash) {
+				participant.hash = this.store.hash(`${participant.name}-${participant.avatar}`);
+				participant.events.unshift({
+					type: "connection",
+					date: Date.now(),
+					action: `join (${this.store.hash(participant.id)})`
+				});
+			}
+			if(participant._deleted) {
+				participant.events.push({
+					type: "connection",
+					date: Date.now(),
+					action: `leave (${this.store.hash(participant.id)})`
+				});
+				this.participants.delete(participant.id);
+			}
 			const old = existing.find(x => x.dataId === hash);
 			if(old) {
 				if(participant.subname && old.subname !== participant.subname) {
@@ -125,17 +143,20 @@ class Meeting {
 				});
 			}
 
-			(async () => {
-				if(participant.events.length) {
-					const data = await Store.getParticipantData(this.info.dataId, hash);
+
+			
+			if(participant.events.length) {
+				(async () => {
+					const data = await this.store.getParticipantData(this.info.dataId, hash);
 					data.push(...participant.events);
 					participant.events.length = 0;
-					await Store.updateParticipantData(this.info.dataId, hash, data);
-				}
-			})().catch(console.error);
+					await this.store.updateParticipantData(this.info.dataId, hash, data);
+				})().catch(console.error);
+			}
+			
 		});
-		Store.updateParticipants(this.info.dataId, existing);
-		this.options = await Store.getOptions();
+		this.store.updateParticipants(this.info.dataId, existing);
+		this.options = await this.store.getOptions();
 	}
 	
 	_attachMain() {

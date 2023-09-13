@@ -37,6 +37,22 @@ class Participant {
 	get _debug() {
 		return this.meeting._debug;
 	}
+
+	get _deleted() {
+		if(this.meeting._main_attached) {
+			if(this.meeting._tab1_contributors_attached) {
+				return !this._main_attached && !this._tab_attached;
+			} else {
+				return !this._main_attached;
+			}
+		} else {
+			if(this.meeting._tab1_contributors_attached) {
+				return !this._tab_attached;
+			} else {
+				return false;
+			}
+		}
+	}
 	
 	/**
 	 * @param {Element} node 
