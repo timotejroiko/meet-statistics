@@ -212,6 +212,15 @@ class Participant {
 			console.log("mic event", event);
 		}
 		this._mic_status = event[0].target.classList.length === 2;
+		if(!this._mic_status) {
+			clearTimeout(this._voice_status);
+			this._voice_status = -1;
+			this.events.push({
+				time: Date.now(),
+				type: "voice",
+				action: "stop"
+			});
+		}
 		this.events.push({
 			time: Date.now(),
 			type: "mic",
@@ -226,25 +235,26 @@ class Participant {
 		if(this._debug) {
 			console.log("voice event", event);
 		}
-		if(this._mic_status) {
-			if(this._voice_status > -1) {
-				clearTimeout(this._voice_status);
-			} else {
-				this.events.push({
-					time: Date.now(),
-					type: "voice",
-					action: "start"
-				});
-			}
-			this._voice_status = setTimeout(() => {
-				this._voice_status = -1;
-				this.events.push({
-					time: Date.now(),
-					type: "voice",
-					action: "stop"
-				});
-			}, 1000);
+		if(!this._mic_status) {
+			return;
 		}
+		if(this._voice_status > -1) {
+			clearTimeout(this._voice_status);
+		} else {
+			this.events.push({
+				time: Date.now(),
+				type: "voice",
+				action: "start"
+			});
+		}
+		this._voice_status = setTimeout(() => {
+			this._voice_status = -1;
+			this.events.push({
+				time: Date.now(),
+				type: "voice",
+				action: "stop"
+			});
+		}, 1000);
 	}
 	
 	/**
@@ -288,6 +298,15 @@ class Participant {
 				return;
 			}
 			this._mic_status = event[0].target.classList.length === 1;
+			if(!this._mic_status && this._voice_status > -1) {
+				clearTimeout(this._voice_status);
+				this._voice_status = -1;
+				this.events.push({
+					time: Date.now(),
+					type: "voice",
+					action: "stop"
+				});
+			}
 			this.events.push({
 				time: Date.now(),
 				type: "mic",
@@ -306,24 +325,25 @@ class Participant {
 		if(this._main_attached) {
 			return;
 		}
-		if(this._mic_status) {
-			if(this._voice_status > -1) {
-				clearTimeout(this._voice_status);
-			} else {
-				this.events.push({
-					time: Date.now(),
-					type: "voice",
-					action: "start"
-				});
-			}
-			this._voice_status = setTimeout(() => {
-				this._voice_status = -1;
-				this.events.push({
-					time: Date.now(),
-					type: "voice",
-					action: "stop"
-				});
-			}, 1000);
+		if(!this._mic_status) {
+			return;
 		}
+		if(this._voice_status > -1) {
+			clearTimeout(this._voice_status);
+		} else {
+			this.events.push({
+				time: Date.now(),
+				type: "voice",
+				action: "start"
+			});
+		}
+		this._voice_status = setTimeout(() => {
+			this._voice_status = -1;
+			this.events.push({
+				time: Date.now(),
+				type: "voice",
+				action: "stop"
+			});
+		}, 1000);
 	}
 }
