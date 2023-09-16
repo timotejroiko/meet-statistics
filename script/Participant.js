@@ -304,6 +304,12 @@ class Participant {
 		if(this._debug) {
 			console.log("hand event", event);
 		}
+		const ev = event.find(x => x.addedNodes.length && x.addedNodes[0].nodeName === "I");
+		this.events.push({
+			time: Date.now(),
+			type: "hand",
+			action: ev ? "up" : "down"
+		});
 	}
 
 	/**
