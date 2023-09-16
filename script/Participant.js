@@ -22,6 +22,8 @@ class Participant {
 		this._cam_observer = null;
 		this._hand_node = null
 		this._hand_observer = null;
+		this._emoji_node = null;
+		this._emoji_observer = null;
 		this._tab_mic_node = null;
 		this._tab_mic_observer = null;
 		this._tab_voice_node = null;
@@ -97,6 +99,14 @@ class Participant {
 		this._hand_observer = new MutationObserver(this._onHandMutation.bind(this));
 		this._hand_observer.observe(this._hand_node, {
 			childList: true
+		});
+
+		this._emoji_node = node.firstElementChild?.lastElementChild?.firstElementChild?.firstElementChild;
+		if(!this._emoji_node) { throw new Error("emoji_node not found"); }
+		this._emoji_observer = new MutationObserver(this._onEmojiMutation.bind(this));
+		this._emoji_observer.observe(this._emoji_node, {
+			childList: true,
+			subtree: true
 		});
 		
 		this._main_attached = true;
@@ -293,6 +303,23 @@ class Participant {
 	_onHandMutation(event) {
 		if(this._debug) {
 			console.log("hand event", event);
+		}
+	}
+
+	/**
+	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
+	 */
+	_onEmojiMutation(event) {
+		if(this._debug) {
+			console.log("emoji event", event);
+		}
+		const ev = event.find(x => x.addedNodes.length && x.target.nodeName === "HTML-BLOB");
+		if(ev) {
+			this.events.push({
+				time: Date.now(),
+				type: "emoji",
+				action: ev.addedNodes[0].getAttribute("data-emoji")
+			});
 		}
 	}
 	

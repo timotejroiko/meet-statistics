@@ -416,11 +416,27 @@ class Meeting {
 	}
 	
 	/**
-	 * @param {MutationRecord[]} event 
+	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
 	_onReactionMutation(event) {
 		if(this._debug) {
 			console.log("reaction event", event)
+		}
+		const ev = event.find(x => x.addedNodes.length);
+		if(ev) {
+			const blob = ev.addedNodes[0].querySelector("html-blob");
+			const name = blob?.nextElementSibling?.textContent;
+			const emoji = blob?.querySelector("img")?.getAttribute("alt");
+			const now = Date.now();
+			this.participants.forEach(x => {
+				if(x.name === name && !x._main_attached) {
+					x.events.push({
+						type: "emoji",
+						time: now,
+						action: emoji
+					});
+				}
+			});
 		}
 	}
 	
