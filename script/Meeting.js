@@ -386,7 +386,7 @@ class Meeting {
 		this._tab2_node = document.querySelector("div[data-tab-id='2']");
 		if(!this._tab2_node) { throw new Error("tab2_node not found"); }
 		
-		this._tab2_chat_node = this._tab2_node.querySelector("div[data-tv]");
+		this._tab2_chat_node = this._tab2_node.querySelector("div[aria-live]");
 		if(!this._tab2_chat_node) { throw new Error("chat_node not found"); }
 		
 		this._tab2_chat_observer = new MutationObserver(this._onChatMutation.bind(this));
