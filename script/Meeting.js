@@ -41,6 +41,7 @@ class Meeting {
 		this._tab2_chat_observer = null;
 		
 		this._interval = -1;
+		this._self_name = document.querySelector("div[data-self-name]")?.getAttribute("data-self-name") || "You";
 	}
 	
 	get active() {
@@ -443,31 +444,32 @@ class Meeting {
 		if(this._debug) {
 			console.log("grid event", event)
 		}
-		if(this._grid_node) {
-			const found = [];
-			for(const node of this._grid_node.children) {
-				if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
-					const id = node.firstElementChild?.getAttribute("data-participant-id");
-					if(!id) { continue; }
-					const existing = this.participants.get(id);
-					if(existing) {
-						if(!existing._main_attached) {
-							existing.attachMain(node);
-						}
-					} else {
-						const participant = new Participant(id, this);
-						participant.attachMain(node);
-						this.participants.set(id, participant);
-					}
-					found.push(id);
-				}
-			}
-			this.participants.forEach(x => {
-				if(!found.includes(x.id)) {
-					x.detachMain();
-				};
-			});
+		if(!this._grid_node) {
+			return;
 		}
+		const found = [];
+		for(const node of this._grid_node.children) {
+			if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
+				const id = node.firstElementChild?.getAttribute("data-participant-id");
+				if(!id) { continue; }
+				const existing = this.participants.get(id);
+				if(existing) {
+					if(!existing._main_attached) {
+						existing.attachMain(node);
+					}
+				} else {
+					const participant = new Participant(id, this);
+					participant.attachMain(node);
+					this.participants.set(id, participant);
+				}
+				found.push(id);
+			}
+		}
+		this.participants.forEach(x => {
+			if(!found.includes(x.id)) {
+				x.detachMain();
+			};
+		});
 	}
 	
 	/**
@@ -478,38 +480,87 @@ class Meeting {
 			console.log("reaction event", event)
 		}
 		const ev = event.find(x => x.addedNodes.length);
-		if(ev) {
-			const blob = ev.addedNodes[0].querySelector("html-blob");
-			const name = blob?.nextElementSibling?.textContent;
-			const emoji = blob?.querySelector("img")?.getAttribute("alt");
-			const now = Date.now();
-			this.participants.forEach(x => {
-				if(x.name === name && !x._main_attached) {
-					x.events.push({
-						type: "emoji",
-						time: now,
-						action: emoji
-					});
-				}
-			});
+		if(!ev) {
+			return;
+		}
+		const blob = ev.addedNodes[0].querySelector("html-blob");
+		if(!blob) {
+			return;
+		}
+		const name = blob.nextElementSibling?.textContent;
+		const emoji = blob.querySelector("img")?.getAttribute("alt");
+		const now = Date.now();
+		for(const participant of this.participants.values()) {
+			if((participant.name === name || (participant.self && name === this._self_name)) && !participant._main_attached) {
+				participant.events.push({
+					type: "emoji",
+					time: now,
+					action: emoji
+				});
+			}
 		}
 	}
 	
 	/**
-	 * @param {MutationRecord[]} event 
+	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
 	_onMessageMutation(event) {
 		if(this._debug) {
 			console.log("message event", event)
 		}
+		if(this._tab2_chat_node) {
+			return;
+		}
+		const ev = event.find(x => x.addedNodes.length);
+		if(!ev) {
+			return;
+		}
+		const inode = ev.addedNodes[0].querySelector("i");
+		if(!inode) {
+			return;
+		}
+		const author = inode?.parentElement?.nextElementSibling?.textContent;
+		const content = inode?.parentElement?.parentElement?.nextElementSibling?.textContent;
+		const now = Date.now();
+		for(const participant of this.participants.values()) {
+			if((participant.self && author === this._self_name) || participant.name === author) {
+				participant.events.push({
+					type: "chat",
+					date: now,
+					action: content
+				});
+				break;
+			}
+		}
 	}
 	
 	/**
-	 * @param {MutationRecord[]} event 
+	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
 	_onChatMutation(event) {
 		if(this._debug) {
 			console.log("chat event", event)
+		}
+		const text = event.find(x => x.addedNodes.length);
+		if(!text) {
+			return;
+		}
+		const node = text.addedNodes[0].querySelector("div[data-is-tv]");
+		if(!node) {
+			return;
+		}
+		const content = node?.textContent;
+		const author = node?.parentElement?.parentElement?.parentElement?.getAttribute("data-sender-name");
+		const now = Date.now();
+		for(const participant of this.participants.values()) {
+			if((participant.self && author === this._self_name) || participant.name === author) {
+				participant.events.push({
+					type: "chat",
+					date: now,
+					action: content
+				});
+				break;
+			}
 		}
 	}
 	
@@ -571,31 +622,32 @@ class Meeting {
 		if(this._debug) {
 			console.log("tab1 contributor event", event)
 		}
-		if(this._tab1_contributors_node) {
-			const found = [];
-			for(const node of this._tab1_contributors_node.children) {
-				const id = node.getAttribute("data-participant-id");
-				if(!id) {
-					console.error(new MeetStatisticsError("tab1 data-participant-id not found"));
-					continue;
-				}
-				const existing = this.participants.get(id);
-				if(existing) {
-					if(!existing._tab_attached) {
-						existing.attachTab(node);
-					}
-				} else {
-					const participant = new Participant(id, this);
-					participant.attachTab(node);
-					this.participants.set(id, participant);
-				}
-				found.push(id);
-			}
-			this.participants.forEach(x => {
-				if(!found.includes(x.id)) {
-					x.detachTab();
-				}
-			});
+		if(!this._tab1_contributors_node) {
+			return;
 		}
+		const found = [];
+		for(const node of this._tab1_contributors_node.children) {
+			const id = node.getAttribute("data-participant-id");
+			if(!id) {
+				console.error(new MeetStatisticsError("tab1 data-participant-id not found"));
+				continue;
+			}
+			const existing = this.participants.get(id);
+			if(existing) {
+				if(!existing._tab_attached) {
+					existing.attachTab(node);
+				}
+			} else {
+				const participant = new Participant(id, this);
+				participant.attachTab(node);
+				this.participants.set(id, participant);
+			}
+			found.push(id);
+		}
+		this.participants.forEach(x => {
+			if(!found.includes(x.id)) {
+				x.detachTab();
+			}
+		});
 	}
 }
