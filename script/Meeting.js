@@ -441,6 +441,7 @@ class Meeting {
 			console.log("grid event", event)
 		}
 		if(this._grid_node) {
+			const found = [];
 			for(const node of this._grid_node.children) {
 				if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
 					const id = node.firstElementChild?.getAttribute("data-participant-id");
@@ -455,8 +456,14 @@ class Meeting {
 						participant.attachMain(node);
 						this.participants.set(id, participant);
 					}
+					found.push(id);
 				}
 			}
+			this.participants.forEach(x => {
+				if(!found.includes(x.id)) {
+					x.detachMain();
+				};
+			});
 		}
 	}
 	
@@ -562,6 +569,7 @@ class Meeting {
 			console.log("tab1 contributor event", event)
 		}
 		if(this._tab1_contributors_node) {
+			const found = [];
 			for(const node of this._tab1_contributors_node.children) {
 				const id = node.getAttribute("data-participant-id");
 				if(!id) {
@@ -578,7 +586,13 @@ class Meeting {
 					participant.attachTab(node);
 					this.participants.set(id, participant);
 				}
+				found.push(id);
 			}
+			this.participants.forEach(x => {
+				if(!found.includes(x.id)) {
+					x.detachTab();
+				}
+			});
 		}
 	}
 }

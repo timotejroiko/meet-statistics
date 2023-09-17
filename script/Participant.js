@@ -183,6 +183,10 @@ class Participant {
 		}
 		
 		this._main_attached = false;
+
+		if(this._debug) {
+			console.log(`participant ${this.name} main detached`);
+		}
 	}
 	
 	/**
@@ -269,6 +273,10 @@ class Participant {
 		this._tab_voice_node = null;
 		
 		this._tab_attached = false;
+
+		if(this._debug) {
+			console.log(`participant ${this.name} tab detached`);
+		}
 	}
 
 	attachTabNotselfVoice() {
