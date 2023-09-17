@@ -312,7 +312,7 @@ class Participant {
 			console.log("mic event", event);
 		}
 		this._mic_status = event[0].target.classList.length === 2;
-		if(this._mic_status && this._voice_status > -1) {
+		if(!this._mic_status && this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 			this._voice_status = -1;
 			this.events.push({
@@ -413,32 +413,39 @@ class Participant {
 		if(this._debug) {
 			console.log("tab mic event", event);
 		}
+		// is not self
 		if(event[0].type === "childList") {
-			if(this._tab_mic_node?.querySelector("i")?.parentElement?.classList.length === 2) {
+			const mic = this._tab_mic_node?.querySelector("i")?.parentElement?.classList.length === 2;
+			if(mic) {
 				this.attachTabNotselfVoice();
 			} else {
 				this.detachTabNotselfVoice();
 			}
+			if(this._mic_observer) {
+				return;
+			}
+			this._mic_status = mic;
 		} else {
+			// is self
 			if(this._mic_observer) {
 				return;
 			}
 			this._mic_status = event[0].target.classList.length === 1;
-			if(!this._mic_status && this._voice_status > -1) {
-				clearTimeout(this._voice_status);
-				this._voice_status = -1;
-				this.events.push({
-					time: Date.now(),
-					type: "voice",
-					action: "stop"
-				});
-			}
+		}
+		if(!this._mic_status && this._voice_status > -1) {
+			clearTimeout(this._voice_status);
+			this._voice_status = -1;
 			this.events.push({
 				time: Date.now(),
-				type: "mic",
-				action: this._mic_status ? "enabled" : "disabled"
+				type: "voice",
+				action: "stop"
 			});
 		}
+		this.events.push({
+			time: Date.now(),
+			type: "mic",
+			action: this._mic_status ? "enabled" : "disabled"
+		});
 	}	
 	
 	/**
