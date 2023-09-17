@@ -5,10 +5,17 @@
 	"manifest_version": 3,
 	"action": {
 		"default_popup": "popup/index.html",
-		"default_icon": "popup/icon.png"
+		"default_icon": {
+			"16": "img/16.png",
+			"24": "img/24.png",
+			"32": "img/32.png",
+			"48": "img/48.png",
+			"64": "img/64.png",
+			"128": "img/128.png"
+		}
 	},
 	"options_page": "options/index.html",
-	"permissions": ["storage", "tabs"],
+	"permissions": ["storage"],
 	"content_scripts": [
 		{
 			"js": [
@@ -24,7 +31,15 @@
 	],
 	"icons": {
 		"16": "img/16.png",
+		"24": "img/24.png",
+		"32": "img/32.png",
 		"48": "img/48.png",
+		"64": "img/64.png",
 		"128": "img/128.png"
-	}
+	},
+	"author": {
+		"email": "timotejroiko@yahoo.com.br"
+	},
+	"homepage_url": "https://github.com/timotejroiko/meet-statistics",
+	"minimum_chrome_version": "85"
 }
