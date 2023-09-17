@@ -109,7 +109,7 @@ class Meeting {
 		this.participants.forEach(participant => {
 			let hash = participant.hash;
 			if(!hash) {
-				participant.hash = this.store.hash(`${participant.name}-${participant.avatar}`);
+				hash = participant.hash = this.store.hash(`${participant.name}-${participant.avatar}`);
 				participant.events.unshift({
 					type: "connection",
 					date: Date.now(),
