@@ -126,6 +126,7 @@ class Meeting {
 		const meeting = list.find(x => x.dataId === this.info.dataId);
 		if(meeting) {
 			meeting.lastSeen = now;
+			meeting.title = document.title;
 			// @ts-ignore
 			await chrome.storage.local.set({ list });
 		}

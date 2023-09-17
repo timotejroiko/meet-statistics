@@ -1,6 +1,6 @@
 {
 	"name": "Meet Statistics",
-	"description": "Track participant engagement by monitoring their message, reaction, hands up, camera and microphone activity",
+	"description": "Track user engagement in Google Meet by monitoring attendance, text messages, reactions, hands up and camera/voice activity",
 	"version": "0.1",
 	"manifest_version": 3,
 	"action": {
@@ -15,7 +15,7 @@
 		}
 	},
 	"options_page": "options/index.html",
-	"permissions": ["storage"],
+	"permissions": ["storage", "activeTab"],
 	"content_scripts": [
 		{
 			"js": [

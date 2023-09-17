@@ -8,8 +8,8 @@ chrome.storage.sync = AsyncMap<{
 
 chrome.storage.local = AsyncMap<{
 	list: Array<MeetingObject>
-	[meeting_id]: Array<ParticipantObject>
-	[meeting_id-participant_id]: Array<EventsObject>
+	[P-meeting_id]: Array<ParticipantObject>
+	[D-meeting_id-participant_id]: Array<EventObject>
 }>
 
 */
@@ -19,13 +19,13 @@ class Store {
 	static defaultOptions = {
 		debug: false,
 		track_mic: true,
-		track_tab_mic: true,
 		track_cam: true,
 		track_voice: true,
-		track_tab_voice: true,
 		track_reactions: true,
 		track_messages: true,
-		track_hands: true
+		track_message_content: true,
+		track_hands: true,
+		track_presentation: true
 	}
 
 	/**
@@ -65,10 +65,9 @@ class Store {
 
 	/**
 	 * @param {string} id 
-	 * @param {string} title 
 	 * @param {boolean} update
 	 */
-	static async findOrCreateMeeting(id, title = "no title", update = false) {
+	static async findOrCreateMeeting(id, update = false) {
 		const now = Date.now();
 		const list = await Store.listMeetings();
 		const existing = list.find(x => x.id === id && x.lastSeen + 3600000 > now);
@@ -82,7 +81,7 @@ class Store {
 		}
 		const obj = {
 			id,
-			title,
+			title: "",
 			dataId: Store.hash(`${id}-${now.toString(36)}`),
 			firstSeen: now,
 			lastSeen: now,
