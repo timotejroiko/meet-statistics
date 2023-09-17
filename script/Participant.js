@@ -31,11 +31,10 @@ class Participant {
 		this._tab_mic_observer = null;
 		this._tab_voice_node = null;
 		this._tab_voice_observer = null;
-		
-		this._main_attached = false;
-		this._tab_attached = false;
+
 		this._mic_status = false;
 		this._cam_status = false;
+		this._is_presentation = false;
 		this._voice_status = -1;
 		this._voice_stop_timeout = 5000;
 	}
@@ -47,13 +46,13 @@ class Participant {
 	get _deleted() {
 		if(this.meeting._grid_node) {
 			if(this.meeting._tab1_contributors_node) {
-				return !this._main_attached && !this._tab_attached;
+				return !this._main_node && !this._tab_node;
 			} else {
-				return !this._main_attached;
+				return !this._main_node;
 			}
 		} else {
 			if(this.meeting._tab1_contributors_node) {
-				return !this._tab_attached;
+				return !this._tab_node;
 			} else {
 				return false;
 			}
@@ -64,6 +63,7 @@ class Participant {
 	 * @param {Element} node 
 	 */
 	attachMain(node) {
+		this._main_node = node;
 		this.name ||= node.querySelector("div[jsslot] div[style]")?.textContent;
 		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 
@@ -145,8 +145,6 @@ class Participant {
 			console.error(new MeetStatisticsError("emoji_node not found"));
 		}
 		
-		this._main_attached = true;
-		
 		if(this._debug) {
 			console.log(`participant ${this.name} main attached`);
 		}
@@ -173,7 +171,9 @@ class Participant {
 		this._emoji_observer = null;
 		this._emoji_node = null;
 
-		if(this._voice_status > -1 && !this._tab_attached) {
+		this._main_node = null
+
+		if(this._voice_status > -1 && !this._tab_node) {
 			clearTimeout(this._voice_status);
 			this.events.push({
 				time: Date.now(),
@@ -181,8 +181,6 @@ class Participant {
 				action: "stop"
 			});
 		}
-		
-		this._main_attached = false;
 
 		if(this._debug) {
 			console.log(`participant ${this.name} main detached`);
@@ -193,6 +191,7 @@ class Participant {
 	 * @param {Element} node 
 	 */
 	attachTab(node) {
+		this._tab_node = node;
 		this.name ||= node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
 		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		this.subname ||= node.querySelector("img")?.parentElement?.nextElementSibling?.lastElementChild?.textContent;
@@ -253,8 +252,6 @@ class Participant {
 				console.error(new MeetStatisticsError("tab_mic_node not found"));
 			}
 		}
-
-		this._tab_attached = true;
 		
 		if(this._debug) {
 			console.log(`participant ${this.name} tab attached`);
@@ -270,7 +267,16 @@ class Participant {
 		this._tab_voice_observer = null;
 		this._tab_voice_node = null;
 		
-		this._tab_attached = false;
+		this._tab_node = null;
+
+		if(this._voice_status > -1 && !this._main_node) {
+			clearTimeout(this._voice_status);
+			this.events.push({
+				time: Date.now(),
+				type: "voice",
+				action: "stop"
+			});
+		}
 
 		if(this._debug) {
 			console.log(`participant ${this.name} tab detached`);
@@ -455,7 +461,7 @@ class Participant {
 		if(this._debug) {
 			console.log("tab voice event", event);
 		}
-		if(this._main_attached) {
+		if(this._main_node) {
 			return;
 		}
 		if(!this._mic_status) {

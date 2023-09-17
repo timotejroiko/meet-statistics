@@ -49,6 +49,10 @@ class Meeting {
 		return this._interval > -1;
 	}
 
+	get connected() {
+		return Boolean(this._grid_node || this._tab1_node || this._tab2_node);
+	}
+
 	get _debug() {
 		return this.options.debug;
 	}
@@ -58,10 +62,10 @@ class Meeting {
 			for(const participant of this.participants.values()) {
 				if(participant.self) {
 					let you;
-					if(participant._main_attached) {
-						you = participant._hand_node?.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
-					} else if(participant._tab_attached) {
-						you = participant._tab_mic_node?.closest("div[data-participant-id]")?.firstElementChild?.lastElementChild?.firstElementChild?.lastElementChild?.textContent;
+					if(participant._main_node) {
+						you = participant._main_node.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
+					} else if(participant._tab_node) {
+						you = participant._tab_node.querySelector("img")?.parentElement?.nextElementSibling?.firstChild?.lastChild?.textContent;
 						you = (you || "").slice(1, -1);
 					}
 					if(you) {
@@ -94,10 +98,12 @@ class Meeting {
 				this._attachTab2();
 			}
 			// dont wanna deal with background process and messaging, so we just sync every second lol
-			this.syncData().catch(e => {
-				console.error(e);
-				this.stop();
-			});
+			if(this.connected) {
+				this.syncData().catch(e => {
+					console.error(e);
+					this.stop();
+				});
+			}
 		}, 1000);
 		if(this._debug) {
 			console.log("monitoring started");
@@ -234,7 +240,7 @@ class Meeting {
 					if(!id) { continue; }
 					const existing = this.participants.get(id);
 					if(existing) {
-						if(!existing._main_attached) {
+						if(!existing._main_node) {
 							existing.attachMain(node);
 						}
 					} else {
@@ -411,7 +417,7 @@ class Meeting {
 				}
 				const existing = this.participants.get(id);
 				if(existing) {
-					if(!existing._tab_attached) {
+					if(!existing._tab_node) {
 						existing.attachTab(node);
 					}
 				} else {
@@ -486,7 +492,7 @@ class Meeting {
 				if(!id) { continue; }
 				const existing = this.participants.get(id);
 				if(existing) {
-					if(!existing._main_attached) {
+					if(!existing._main_node) {
 						existing.attachMain(node);
 					}
 				} else {
@@ -523,7 +529,7 @@ class Meeting {
 		const emoji = blob.querySelector("img")?.getAttribute("alt");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
-			if((participant.name === name || (participant.self && name === this._self)) && !participant._main_attached) {
+			if((participant.name === name || (participant.self && name === this._self)) && !participant._main_node) {
 				participant.events.push({
 					type: "emoji",
 					time: now,
@@ -666,7 +672,7 @@ class Meeting {
 			}
 			const existing = this.participants.get(id);
 			if(existing) {
-				if(!existing._tab_attached) {
+				if(!existing._tab_node) {
 					existing.attachTab(node);
 				}
 			} else {
