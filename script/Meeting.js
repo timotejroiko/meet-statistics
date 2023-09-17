@@ -18,6 +18,7 @@ class Meeting {
 		this.store = store;
 		
 		this._grid_node = null;
+		this._grid_observer = null;
 		this._grid_reactions_node = null;
 		this._grid_reactions_observer = null;
 		this._grid_messages_node = null;
@@ -161,6 +162,11 @@ class Meeting {
 	_attachMain() {
 		this._grid_node = document.querySelector("div[data-participant-id]:not([role])")?.parentElement?.parentElement;
 		if(this._grid_node) {
+			this._grid_observer = new MutationObserver(this._onGridMutation.bind(this));
+			this._grid_observer.observe(this._grid_node, {
+				childList: true
+			});
+
 			this._grid_reactions_node = this._grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
 			if(this._grid_reactions_node) {
 				this._grid_reactions_observer = new MutationObserver(this._onReactionMutation.bind(this));
@@ -170,18 +176,18 @@ class Meeting {
 			} else {
 				console.error(new MeetStatisticsError("reactions_node not found"));
 			}
-
-			this._grid_messages_node = this._grid_node.querySelector('div[data-update-corner]')?.firstElementChild;
-			if(this._grid_messages_node) {
-				this._grid_messages_observer = new MutationObserver(this._onMessageMutation.bind(this));
-				this._grid_messages_observer.observe(this._grid_messages_node, {
-					childList: true
-				});
-			} else {
-				console.error(new MeetStatisticsError("messages_node not found"));
-			}
 		} else {
 			console.error(new MeetStatisticsError("grid_node not found"));
+		}
+
+		this._grid_messages_node = document.querySelector('div[data-update-corner]')?.firstElementChild;
+		if(this._grid_messages_node) {
+			this._grid_messages_observer = new MutationObserver(this._onMessageMutation.bind(this));
+			this._grid_messages_observer.observe(this._grid_messages_node, {
+				childList: true
+			});
+		} else {
+			console.error(new MeetStatisticsError("messages_node not found"));
 		}
 		
 		if(this._debug) {
@@ -426,6 +432,33 @@ class Meeting {
 			console.log("tab2 detached");
 		}
 	}
+
+	/**
+	 * @param {MutationRecord[]} event 
+	 */
+	_onGridMutation(event) {
+		if(this._debug) {
+			console.log("grid event", event)
+		}
+		if(this._grid_node) {
+			for(const node of this._grid_node.children) {
+				if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
+					const id = node.firstElementChild?.getAttribute("data-participant-id");
+					if(!id) { continue; }
+					const existing = this.participants.get(id);
+					if(existing) {
+						if(!existing._main_attached) {
+							existing.attachMain(node);
+						}
+					} else {
+						const participant = new Participant(id, this);
+						participant.attachMain(node);
+						this.participants.set(id, participant);
+					}
+				}
+			}
+		}
+	}
 	
 	/**
 	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
@@ -528,6 +561,24 @@ class Meeting {
 		if(this._debug) {
 			console.log("tab1 contributor event", event)
 		}
-
+		if(this._tab1_contributors_node) {
+			for(const node of this._tab1_contributors_node.children) {
+				const id = node.getAttribute("data-participant-id");
+				if(!id) {
+					console.error(new MeetStatisticsError("tab1 data-participant-id not found"));
+					continue;
+				}
+				const existing = this.participants.get(id);
+				if(existing) {
+					if(!existing._tab_attached) {
+						existing.attachTab(node);
+					}
+				} else {
+					const participant = new Participant(id, this);
+					participant.attachTab(node);
+					this.participants.set(id, participant);
+				}
+			}
+		}
 	}
 }
