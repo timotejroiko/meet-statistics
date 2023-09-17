@@ -41,7 +41,7 @@ class Meeting {
 		this._tab2_chat_observer = null;
 		
 		this._interval = -1;
-		this._self_name = document.querySelector("div[data-self-name]")?.getAttribute("data-self-name") || "You";
+		this._self_name = null;
 	}
 	
 	get active() {
@@ -50,6 +50,26 @@ class Meeting {
 
 	get _debug() {
 		return this.options.debug;
+	}
+
+	get _self() {
+		if(!this._self_name) {
+			for(const participant of this.participants.values()) {
+				if(participant.self) {
+					let you;
+					if(participant._main_attached) {
+						you = participant._hand_node?.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
+					} else if(participant._tab_attached) {
+						you = participant._tab_mic_node?.closest("div[data-participant-id]")?.firstElementChild?.lastElementChild?.firstElementChild?.lastElementChild?.textContent;
+						you = (you || "").slice(1, -1);
+					}
+					if(you) {
+						this._self_name = you;
+					}
+				}
+			}
+		}
+		return this._self_name;
 	}
 	
 	start() {
@@ -494,7 +514,7 @@ class Meeting {
 		const emoji = blob.querySelector("img")?.getAttribute("alt");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
-			if((participant.name === name || (participant.self && name === this._self_name)) && !participant._main_attached) {
+			if((participant.name === name || (participant.self && name === this._self)) && !participant._main_attached) {
 				participant.events.push({
 					type: "emoji",
 					time: now,
@@ -526,7 +546,7 @@ class Meeting {
 		const content = inode?.parentElement?.parentElement?.nextElementSibling?.textContent;
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
-			if((participant.self && author === this._self_name) || participant.name === author) {
+			if((participant.self && author === this._self) || participant.name === author) {
 				participant.events.push({
 					type: "chat",
 					date: now,
@@ -556,7 +576,7 @@ class Meeting {
 		const author = node?.parentElement?.parentElement?.parentElement?.getAttribute("data-sender-name");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
-			if((participant.self && author === this._self_name) || participant.name === author) {
+			if((participant.self && author === this._self) || participant.name === author) {
 				participant.events.push({
 					type: "chat",
 					date: now,
