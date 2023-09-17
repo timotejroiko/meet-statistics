@@ -13,6 +13,9 @@ class Participant {
 		this.meeting = meeting;
 		this.events = [];
 		this.hash = "";
+
+		this._main_node = null;
+		this._tab_node = null;
 		
 		this._mic_node = null;
 		this._mic_observer = null;
@@ -31,9 +34,10 @@ class Participant {
 		
 		this._main_attached = false;
 		this._tab_attached = false;
-		this._notself_voice_attached = false;
 		this._mic_status = false;
+		this._cam_status = false;
 		this._voice_status = -1;
+		this._voice_stop_timeout = 5000;
 	}
 
 	get _debug() {
@@ -41,14 +45,14 @@ class Participant {
 	}
 
 	get _deleted() {
-		if(this.meeting._main_attached) {
-			if(this.meeting._tab1_contributors_attached) {
+		if(this.meeting._grid_node) {
+			if(this.meeting._tab1_contributors_node) {
 				return !this._main_attached && !this._tab_attached;
 			} else {
 				return !this._main_attached;
 			}
 		} else {
-			if(this.meeting._tab1_contributors_attached) {
+			if(this.meeting._tab1_contributors_node) {
 				return !this._tab_attached;
 			} else {
 				return false;
@@ -60,7 +64,6 @@ class Participant {
 	 * @param {Element} node 
 	 */
 	attachMain(node) {
-
 		if(!this.name) {
 			this.name = node.querySelector("div[jsslot] div[style]")?.textContent;
 		}
@@ -69,45 +72,78 @@ class Participant {
 		this.avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		
 		this._mic_node = node.firstElementChild?.lastElementChild?.lastElementChild?.firstElementChild;
-		if(!this._mic_node) { throw new Error("mic_node not found"); }
-		this._mic_observer = new MutationObserver(this._onMicMutation.bind(this));
-		this._mic_observer.observe(this._mic_node, {
-			attributes: true,
-			attributeFilter: ["class"]
-		});
-
-		this._mic_status = this._mic_node.classList.length === 2;
+		if(this._mic_node) {
+			this._mic_observer = new MutationObserver(this._onMicMutation.bind(this));
+			this._mic_observer.observe(this._mic_node, {
+				attributes: true,
+				attributeFilter: ["class"]
+			});
+			const micstatus = this._mic_node.classList.length === 2;
+			if(micstatus !== this._mic_status) {
+				this._mic_status = micstatus;
+				this.events.push({
+					time: Date.now(),
+					type: "mic",
+					action: micstatus ? "enabled" : "disabled"
+				});
+			}
+		} else {
+			console.error(new MeetStatisticsError("mic_node not found"));
+		}
 		
-		this._voice_node = this._mic_node?.querySelector("div[jscontroller][class][jsname][jsaction]")
-		if(!this._voice_node) { throw new Error("voice_node not found"); }
-		this._voice_observer = new MutationObserver(this._onVoiceMutation.bind(this));
-		this._voice_observer.observe(this._voice_node, {
-			attributes: true,
-			attributeFilter: ["class"]
-		});
+		
+		this._voice_node = this._mic_node?.querySelector("div[jscontroller][class][jsname][jsaction]");
+		if(this._voice_node) {
+			this._voice_observer = new MutationObserver(this._onVoiceMutation.bind(this));
+			this._voice_observer.observe(this._voice_node, {
+				attributes: true,
+				attributeFilter: ["class"]
+			});
+		} else {
+			console.error(new MeetStatisticsError("voice_node not found"));
+		}
 		
 		this._cam_node = node.querySelector("div[data-resolution-cap]");
-		if(!this._cam_node) { throw new Error("cam_node not found"); }
-		this._cam_observer = new MutationObserver(this._onCamMutation.bind(this));
-		this._cam_observer.observe(this._cam_node, {
-			attributes: true,
-			attributeFilter: ["class"]
-		});
+		if(this._cam_node) {
+			this._cam_observer = new MutationObserver(this._onCamMutation.bind(this));
+			this._cam_observer.observe(this._cam_node, {
+				attributes: true,
+				attributeFilter: ["class"]
+			});
+			const camstatus = this._cam_node.classList.length !== 2;
+			if(camstatus !== this._cam_status) {
+				this._cam_status = camstatus;
+				this.events.push({
+					time: Date.now(),
+					type: "cam",
+					action: camstatus ? "opened" : "closed"
+				});
+			}
+		} else {
+			console.error(new MeetStatisticsError("cam_node not found"));
+		}
 		
 		this._hand_node = node.querySelector("div[data-self-name]")?.parentElement;
-		if(!this._hand_node) { throw new Error("hand_node not found"); }
-		this._hand_observer = new MutationObserver(this._onHandMutation.bind(this));
-		this._hand_observer.observe(this._hand_node, {
-			childList: true
-		});
+		if(this._hand_node) {
+			this._hand_observer = new MutationObserver(this._onHandMutation.bind(this));
+			this._hand_observer.observe(this._hand_node, {
+				childList: true
+			});
+		} else {
+			console.error(new MeetStatisticsError("hand_node not found"));
+		}
+		
 
 		this._emoji_node = node.firstElementChild?.lastElementChild?.firstElementChild?.firstElementChild;
-		if(!this._emoji_node) { throw new Error("emoji_node not found"); }
-		this._emoji_observer = new MutationObserver(this._onEmojiMutation.bind(this));
-		this._emoji_observer.observe(this._emoji_node, {
-			childList: true,
-			subtree: true
-		});
+		if(this._emoji_node) {
+			this._emoji_observer = new MutationObserver(this._onEmojiMutation.bind(this));
+			this._emoji_observer.observe(this._emoji_node, {
+				childList: true,
+				subtree: true
+			});
+		} else {
+			console.error(new MeetStatisticsError("emoji_node not found"));
+		}
 		
 		this._main_attached = true;
 		
@@ -132,6 +168,19 @@ class Participant {
 		this._hand_observer?.disconnect();
 		this._hand_observer = null;
 		this._hand_node = null;
+
+		this._emoji_observer?.disconnect();
+		this._emoji_observer = null;
+		this._emoji_node = null;
+
+		if(this._voice_status > -1 && !this._tab_attached) {
+			clearTimeout(this._voice_status);
+			this.events.push({
+				time: Date.now(),
+				type: "voice",
+				action: "stop"
+			});
+		}
 		
 		this._main_attached = false;
 	}
@@ -153,40 +202,60 @@ class Participant {
 		const selfmic = node.querySelector("div[data-use-tooltip]");
 		if(selfmic) {
 			this._tab_mic_node = selfmic;
-			if(!this._tab_mic_node) { throw new Error("tab_mic_node not found"); }
 			this._tab_mic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
 			this._tab_mic_observer.observe(this._tab_mic_node, {
 				attributes: true,
 				attributeFilter: ["class"]
 			});
 
-			this._mic_status = this._tab_mic_node.classList.length === 1;
+			const micstatus = this._tab_mic_node.classList.length === 1;
+			if(micstatus !== this._mic_status) {
+				this._mic_status = micstatus;
+				this.events.push({
+					time: Date.now(),
+					type: "mic",
+					action: micstatus ? "enabled" : "disabled"
+				});
+			}
 
 			this._tab_voice_node = this._tab_mic_node?.lastElementChild;
-			if(!this._tab_voice_node) { throw new Error("tabvoice_node not found"); }
-			this._tab_voice_observer = new MutationObserver(this._onTabvoiceMutation.bind(this));
-			this._tab_voice_observer.observe(this._tab_voice_node, {
-				attributes: true,
-				attributeFilter: ["class"]
-			});
+			if(this._tab_voice_node) {
+				this._tab_voice_observer = new MutationObserver(this._onTabvoiceMutation.bind(this));
+				this._tab_voice_observer.observe(this._tab_voice_node, {
+					attributes: true,
+					attributeFilter: ["class"]
+				});
+			} else {
+				console.error(new MeetStatisticsError("tab_voice_node not found"));
+			}
 		} else {
 			this._tab_mic_node = node.lastElementChild?.firstElementChild;
-			if(!this._tab_mic_node) { throw new Error("tab_mic_node not found"); }
-			this._tab_mic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
-			this._tab_mic_observer.observe(this._tab_mic_node, {
-				childList: true
-			});
+			if(this._tab_mic_node) {
+				this._tab_mic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
+				this._tab_mic_observer.observe(this._tab_mic_node, {
+					childList: true
+				});
+				const micstatus = this._tab_mic_node.querySelector("i")?.parentElement?.classList.length === 2;
+				if(micstatus !== this._mic_status) {
+					this._mic_status = micstatus;
+					this.events.push({
+						time: Date.now(),
+						type: "mic",
+						action: micstatus ? "enabled" : "disabled"
+					});
+				}
+				if(micstatus) {
+					this.attachTabNotselfVoice();
+				}
+			} else {
+				console.error(new MeetStatisticsError("tab_mic_node not found"));
+			}
 		}
 
 		this._tab_attached = true;
 		
 		if(this._debug) {
 			console.log(`participant ${this.name} tab attached`);
-		}
-
-		if(!selfmic && this._tab_mic_node.querySelector("i")?.parentElement?.classList.length === 2) {
-			this._mic_status = true;
-			this.attachTabNotselfVoice();
 		}
 	}
 	
@@ -204,14 +273,15 @@ class Participant {
 
 	attachTabNotselfVoice() {
 		this._tab_voice_node = this._tab_mic_node?.querySelector("i")?.previousElementSibling;
-		if(!this._tab_voice_node) { throw new Error("tab_mic_node not found"); }
-		this._tab_voice_observer = new MutationObserver(this._onTabvoiceMutation.bind(this));
-		this._tab_voice_observer.observe(this._tab_voice_node, {
-			attributes: true,
-			attributeFilter: ["class"]
-		});
-
-		this._notself_voice_attached = true;
+		if(this._tab_voice_node) {
+			this._tab_voice_observer = new MutationObserver(this._onTabvoiceMutation.bind(this));
+			this._tab_voice_observer.observe(this._tab_voice_node, {
+				attributes: true,
+				attributeFilter: ["class"]
+			});
+		} else {
+			console.error(new MeetStatisticsError("tab_voice_node (notself) not found"));
+		}
 
 		if(this._debug) {
 			console.log(`participant ${this.name} tab notself voice attached`);
@@ -222,8 +292,6 @@ class Participant {
 		this._tab_voice_observer?.disconnect();
 		this._tab_voice_observer = null;
 		this._tab_voice_node = null;
-
-		this._notself_voice_attached = true;
 
 		if(this._debug) {
 			console.log(`participant ${this.name} tab notself voice detached`);
@@ -238,7 +306,7 @@ class Participant {
 			console.log("mic event", event);
 		}
 		this._mic_status = event[0].target.classList.length === 2;
-		if(!this._mic_status) {
+		if(this._mic_status && this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 			this._voice_status = -1;
 			this.events.push({
@@ -280,7 +348,7 @@ class Participant {
 				type: "voice",
 				action: "stop"
 			});
-		}, 1000);
+		}, this._voice_stop_timeout);
 	}
 	
 	/**
@@ -290,10 +358,11 @@ class Participant {
 		if(this._debug) {
 			console.log("cam event", event);
 		}
+		this._cam_status = event[0].target.classList.length !== 2;
 		this.events.push({
 			time: Date.now(),
 			type: "cam",
-			action: event[0].target.classList.length === 2 ? "closed" : "opened"
+			action: this._cam_status ? "opened" : "closed"
 		});
 	}
 	
@@ -305,11 +374,13 @@ class Participant {
 			console.log("hand event", event);
 		}
 		const ev = event.find(x => x.addedNodes.length && x.addedNodes[0].nodeName === "I");
-		this.events.push({
-			time: Date.now(),
-			type: "hand",
-			action: ev ? "up" : "down"
-		});
+		if(ev) {
+			this.events.push({
+				time: Date.now(),
+				type: "hand",
+				action: "up"
+			});
+		}
 	}
 
 	/**
@@ -393,6 +464,6 @@ class Participant {
 				type: "voice",
 				action: "stop"
 			});
-		}, 1000);
+		}, this._voice_stop_timeout);
 	}
 }
