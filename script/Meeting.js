@@ -232,6 +232,8 @@ class Meeting {
 		this._grid_messages_observer = null;
 		this._grid_messages_node = null;
 
+		this._grid_node = null;
+
 		this.participants.forEach(participant => participant.detachMain());
 		
 		if(this._debug) {
@@ -430,6 +432,7 @@ class Meeting {
 		this._tab2_chat_observer?.disconnect();
 		this._tab2_chat_observer = null;
 		this._tab2_chat_node = null;
+
 		this._tab2_node = null;
 
 		if(this._debug) {
