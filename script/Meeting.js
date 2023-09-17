@@ -42,6 +42,7 @@ class Meeting {
 		
 		this._interval = -1;
 		this._self_name = null;
+		this._first_sync = true;
 	}
 	
 	get active() {
@@ -133,21 +134,10 @@ class Meeting {
 		const existing = await this.store.listMeetingParticipants(this.info.dataId);
 		this.participants.forEach(participant => {
 			let hash = participant.hash;
+			let isnew = false;
 			if(!hash) {
 				hash = participant.hash = this.store.hash(`${participant.name}-${participant.avatar}`);
-				participant.events.unshift({
-					type: "connection",
-					date: Date.now(),
-					action: `join (${this.store.hash(participant.id)})`
-				});
-			}
-			if(participant._deleted) {
-				participant.events.push({
-					type: "connection",
-					date: Date.now(),
-					action: `leave (${this.store.hash(participant.id)})`
-				});
-				this.participants.delete(participant.id);
+				isnew = true;
 			}
 			const old = existing.find(x => x.dataId === hash);
 			if(old) {
@@ -158,6 +148,21 @@ class Meeting {
 					old.self = participant.self;
 				}
 				old.lastSeen = now;
+				if(isnew && !this._first_sync) {
+					participant.events.unshift({
+						type: "connection",
+						date: Date.now(),
+						action: `join (${this.store.hash(participant.id)})`
+					});
+				}
+				if(participant._deleted && !this._first_sync) {
+					participant.events.push({
+						type: "connection",
+						date: Date.now(),
+						action: `leave (${this.store.hash(participant.id)})`
+					});
+					this.participants.delete(participant.id);
+				}
 			} else {
 				existing.push({
 					name: participant.name || "",
@@ -182,6 +187,9 @@ class Meeting {
 		});
 		await this.store.updateParticipants(this.info.dataId, existing);
 		this.options = await this.store.getOptions();
+		if(this._first_sync) {
+			this._first_sync = false;
+		}
 	}
 	
 	_attachMain() {
