@@ -6,9 +6,9 @@ class Participant {
 	constructor(id, meeting) {
 		this.id = id;
 		this.name = null;
-		this.subname = null;
-		this.self = null;
 		this.avatar = null;
+		this.subname = null;
+		this.self = false;
 
 		this.meeting = meeting;
 		this.events = [];
@@ -64,12 +64,12 @@ class Participant {
 	 * @param {Element} node 
 	 */
 	attachMain(node) {
-		if(!this.name) {
-			this.name = node.querySelector("div[jsslot] div[style]")?.textContent;
+		this.name ||= node.querySelector("div[jsslot] div[style]")?.textContent;
+		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+
+		if(!this.self && !node.querySelector('button[disabled]')) {
+			this.self = true;
 		}
-		
-		this.self = node.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
-		this.avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		
 		this._mic_node = node.firstElementChild?.lastElementChild?.lastElementChild?.firstElementChild;
 		if(this._mic_node) {
@@ -193,18 +193,16 @@ class Participant {
 	 * @param {Element} node 
 	 */
 	attachTab(node) {
-		if(!this.name) {
-			this.name = node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
-		}
-
-		if(!this.avatar) {
-			this.avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
-		}
-		
-		this.subname = node.querySelector("img")?.parentElement?.nextElementSibling?.lastElementChild?.textContent;
+		this.name ||= node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
+		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		this.subname ||= node.querySelector("img")?.parentElement?.nextElementSibling?.lastElementChild?.textContent;
 
 		const selfmic = node.querySelector("div[data-use-tooltip]");
 		if(selfmic) {
+			if(!this.self) {
+				this.self = true;
+			}
+
 			this._tab_mic_node = selfmic;
 			this._tab_mic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
 			this._tab_mic_observer.observe(this._tab_mic_node, {

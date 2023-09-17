@@ -115,9 +115,10 @@ class Store {
 	 * @return {Promise<Parameters<Store.updateParticipants>[1]>}
 	 */
 	static async listMeetingParticipants(dataId) {
+		const id = `P-${dataId}`;
 		// @ts-ignore
-		const list = await chrome.storage.local.get(dataId);
-		return list[dataId] || [];
+		const list = await chrome.storage.local.get(id);
+		return list[id] || [];
 	}
 
 	/**
@@ -126,7 +127,7 @@ class Store {
 	 */
 	static async listAllMeetingsParticipants(dataIds) {
 		// @ts-ignore
-		const list = await chrome.storage.local.get(dataIds);
+		const list = await chrome.storage.local.get(dataIds.map(x => `P-${x}`));
 		return list || {};
 	}
 
@@ -136,7 +137,7 @@ class Store {
 	 * @param {{
 	 * 		name: string,
 	 * 		subname: string,
-	 * 		self: string,
+	 * 		self: boolean,
 	 * 		avatar: string,
 	 * 		firstSeen: number,
 	 * 		lastSeen: number,
@@ -146,7 +147,7 @@ class Store {
 	static updateParticipants(meetingId, data) {
 		// @ts-ignore
 		return chrome.storage.local.set({
-			[meetingId]: data
+			[`P-${meetingId}`]: data
 		});
 	}
 
@@ -157,7 +158,7 @@ class Store {
 	 * @returns {Promise<Parameters<Store.updateParticipantData>[2]>}
 	 */
 	static async getParticipantData(meetingId, participantId) {
-		const id = `${meetingId}-${participantId}`;
+		const id = `D-${meetingId}-${participantId}`;
 		// @ts-ignore
 		const data = await chrome.storage.local.get(id);
 		return data[id] || [];
@@ -169,7 +170,7 @@ class Store {
 	 */
 	static async getAllParticipantsData(meetingId) {
 		const list = await Store.listMeetingParticipants(meetingId);
-		const ids = list.map(x => `${meetingId}-${x.dataId}`);
+		const ids = list.map(x => `D-${meetingId}-${x.dataId}`);
 		// @ts-ignore
 		const data = await chrome.storage.local.get(ids);
 		for(const key of Object.keys(data)) {
@@ -193,7 +194,7 @@ class Store {
 	static updateParticipantData(meetingId, participantId, data) {
 		// @ts-ignore
 		return chrome.storage.local.set({
-			[`${meetingId}-${participantId}`]: data
+			[`D-${meetingId}-${participantId}`]: data
 		});
 	}
 }

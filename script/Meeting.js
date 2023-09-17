@@ -72,7 +72,10 @@ class Meeting {
 				this._attachTab2();
 			}
 			// dont wanna deal with background process and messaging, so we just sync every second lol
-			this.syncData().catch(console.error);
+			this.syncData().catch(e => {
+				console.error(e);
+				this.stop();
+			});
 		}, 1000);
 		if(this._debug) {
 			console.log("monitoring started");
@@ -138,7 +141,7 @@ class Meeting {
 					name: participant.name || "",
 					avatar: participant.avatar || "",
 					subname: participant.subname || "",
-					self: participant.self || "",
+					self: participant.self,
 					firstSeen: now,
 					lastSeen: now,
 					dataId: hash
