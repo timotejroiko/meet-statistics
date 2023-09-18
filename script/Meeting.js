@@ -238,6 +238,11 @@ class Meeting {
 				if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
 					const id = node.firstElementChild?.getAttribute("data-participant-id");
 					if(!id) { continue; }
+					// @ts-ignore
+					const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
+					if(ispresentation) {
+						continue;
+					}
 					const existing = this.participants.get(id);
 					if(existing) {
 						if(!existing._main_node) {
@@ -415,6 +420,11 @@ class Meeting {
 					console.error(new MeetStatisticsError("tab1 data-participant-id not found"));
 					continue;
 				}
+				// @ts-ignore
+				const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
+				if(ispresentation) {
+					continue;
+				}
 				const existing = this.participants.get(id);
 				if(existing) {
 					if(!existing._tab_node) {
@@ -490,6 +500,11 @@ class Meeting {
 			if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
 				const id = node.firstElementChild?.getAttribute("data-participant-id");
 				if(!id) { continue; }
+				// @ts-ignore
+				const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
+				if(ispresentation) {
+					continue;
+				}
 				const existing = this.participants.get(id);
 				if(existing) {
 					if(!existing._main_node) {
@@ -668,6 +683,11 @@ class Meeting {
 			const id = node.getAttribute("data-participant-id");
 			if(!id) {
 				console.error(new MeetStatisticsError("tab1 data-participant-id not found"));
+				continue;
+			}
+			// @ts-ignore
+			const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
+			if(ispresentation) {
 				continue;
 			}
 			const existing = this.participants.get(id);
