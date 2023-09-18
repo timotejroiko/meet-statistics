@@ -531,7 +531,7 @@ class Meeting {
 	 */
 	_onGridMutation(event) {
 		if(this._debug) {
-			console.log("grid event", event)
+			console.log("grid event", this, event)
 		}
 		if(!this._grid_node) {
 			return;
@@ -572,7 +572,7 @@ class Meeting {
 	 */
 	_onReactionMutation(event) {
 		if(this._debug) {
-			console.log("reaction event", event)
+			console.log("reaction event", this, event)
 		}
 		const ev = event.find(x => x.addedNodes.length);
 		if(!ev) {
@@ -601,7 +601,7 @@ class Meeting {
 	 */
 	_onMessageMutation(event) {
 		if(this._debug) {
-			console.log("message event", event)
+			console.log("message event", this, event)
 		}
 		if(this._tab2_chat_node) {
 			return;
@@ -634,7 +634,7 @@ class Meeting {
 	 */
 	_onChatMutation(event) {
 		if(this._debug) {
-			console.log("chat event", event)
+			console.log("chat event", this, event)
 		}
 		const text = event.find(x => x.addedNodes.length);
 		if(!text) {
@@ -664,7 +664,7 @@ class Meeting {
 	 */
 	_onTab1HandsContainerMutation([event]) {
 		if(this._debug) {
-			console.log("tab1 hands container event", event)
+			console.log("tab1 hands container event", this, event)
 		}
 		if(event.addedNodes.length && !event.removedNodes.length) {
 			this._attachTab1HandsList();
@@ -678,7 +678,7 @@ class Meeting {
 	 */
 	_onTab1HandsListMutation([event]) {
 		if(this._debug) {
-			console.log("tab1 hands list event", event)
+			console.log("tab1 hands list event", this, event)
 		}
 		if(/** @type {Element} */ (event.target).classList.length > 1) {
 			this._attachTab1Hands();
@@ -692,7 +692,7 @@ class Meeting {
 	 */
 	_onTab1HandsMutation(event) {
 		if(this._debug) {
-			console.log("tab1 hand event", event)
+			console.log("tab1 hand event", this, event)
 		}
 	}
 	
@@ -701,7 +701,7 @@ class Meeting {
 	 */
 	_onTab1ContributorsListMutation([event]) {
 		if(this._debug) {
-			console.log("tab1 contributor list event", event)
+			console.log("tab1 contributor list event", this, event)
 		}
 		if(/** @type {Element} */ (event.target).classList.length > 1) {
 			this._attachTab1Contributors();
@@ -715,7 +715,7 @@ class Meeting {
 	 */
 	_onTab1ContributorsMutation(event) {
 		if(this._debug) {
-			console.log("tab1 contributor event", event)
+			console.log("tab1 contributor event", this, event)
 		}
 		if(!this._tab1_contributors_node) {
 			return;

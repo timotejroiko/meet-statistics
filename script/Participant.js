@@ -316,7 +316,7 @@ class Participant {
 	 */
 	_onMicMutation(event) {
 		if(this._debug) {
-			console.log("mic event", event);
+			console.log("mic event", this, event);
 		}
 		this._mic_status = event[0].target.classList.length === 2;
 		if(!this._mic_status && this._voice_status > -1) {
@@ -340,7 +340,7 @@ class Participant {
 	 */
 	_onVoiceMutation(event) {
 		if(this._debug) {
-			console.log("voice event", event);
+			console.log("voice event", this, event);
 		}
 		if(!this._mic_status) {
 			return;
@@ -369,7 +369,7 @@ class Participant {
 	 */
 	_onCamMutation(event) {
 		if(this._debug) {
-			console.log("cam event", event);
+			console.log("cam event", this, event);
 		}
 		this._cam_status = event[0].target.classList.length !== 2;
 		this.events.push({
@@ -384,7 +384,7 @@ class Participant {
 	 */
 	_onHandMutation(event) {
 		if(this._debug) {
-			console.log("hand event", event);
+			console.log("hand event", this, event);
 		}
 		const ev = event.find(x => x.addedNodes.length && x.addedNodes[0].nodeName === "I");
 		if(ev) {
@@ -401,7 +401,7 @@ class Participant {
 	 */
 	_onEmojiMutation(event) {
 		if(this._debug) {
-			console.log("emoji event", event);
+			console.log("emoji event", this, event);
 		}
 		const ev = event.find(x => x.addedNodes.length && x.target.nodeName === "HTML-BLOB");
 		if(ev) {
@@ -418,7 +418,7 @@ class Participant {
 	 */
 	_onTabmicMutation(event) {
 		if(this._debug) {
-			console.log("tab mic event", event);
+			console.log("tab mic event", this, event);
 		}
 		// is not self
 		if(event[0].type === "childList") {
@@ -460,7 +460,7 @@ class Participant {
 	 */
 	_onTabvoiceMutation(event) {
 		if(this._debug) {
-			console.log("tab voice event", event);
+			console.log("tab voice event", this, event);
 		}
 		if(this._main_node) {
 			return;
@@ -534,7 +534,7 @@ class Presentation {
 		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		
 		if(this._debug) {
-			console.log(`participant ${this.name} main attached`);
+			console.log(`presentation ${this.name} main attached`);
 		}
 	}
 
@@ -542,7 +542,7 @@ class Presentation {
 		this._main_node = null;
 
 		if(this._debug) {
-			console.log(`participant ${this.name} main detached`);
+			console.log(`presentation ${this.name} main detached`);
 		}
 	}
 
@@ -555,7 +555,7 @@ class Presentation {
 		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		
 		if(this._debug) {
-			console.log(`participant ${this.name} tab attached`);
+			console.log(`presentation ${this.name} tab attached`);
 		}
 	}
 	
@@ -563,7 +563,7 @@ class Presentation {
 		this._tab_node = null;
 
 		if(this._debug) {
-			console.log(`participant ${this.name} tab detached`);
+			console.log(`presentation ${this.name} tab detached`);
 		}
 	}
 }
