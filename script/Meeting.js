@@ -545,6 +545,34 @@ class Meeting {
 		if(!this._grid_node) {
 			return;
 		}
+		for(const user of this.participants.values()) {
+			user.detachMain();
+		}
+		setTimeout(() => {
+			if(!this._grid_node) {
+				return;
+			}
+			for(const node of this._grid_node.children) {
+				if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
+					const id = node.firstElementChild?.getAttribute("data-participant-id");
+					if(!id) { continue; }
+					const existing = this.participants.get(id);
+					if(existing) {
+						if(!existing._main_node) {
+							existing.attachMain(node);
+						}
+					} else {
+						// @ts-ignore
+						const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.nextElementSibling.computedStyleMap()?.get("display")?.value !== "none";
+						const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
+						participant.status = "gridevent";
+						participant.attachMain(node);
+						this.participants.set(id, participant);
+					}
+				}
+			}
+		}, 5000);
+		/*
 		const found = [];
 		for(const node of this._grid_node.children) {
 			if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
@@ -571,6 +599,7 @@ class Meeting {
 				x.detachMain();
 			};
 		});
+		*/
 	}
 	
 	/**
