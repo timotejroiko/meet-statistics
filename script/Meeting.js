@@ -139,7 +139,40 @@ class Meeting {
 		const existing = await this.store.listMeetingParticipants(this.info.dataId);
 		for(const participant of this.participants.values()) {
 			if(participant instanceof Presentation) {
-
+				let owner;
+				if(participant.name) {
+					for(const p of this.participants.values()) {
+						if(p instanceof Participant && participant.name === p.name && participant.avatar === p.avatar) {
+							owner = p;
+							break;
+						}
+					}
+				} else {
+					for(const p of this.participants.values()) {
+						if(p instanceof Participant && participant.avatar === p.avatar) {
+							owner = p;
+							break;
+						}
+					}
+				}
+				if(owner) {
+					if(participant.status !== "synced") {
+						owner.events.push({
+							type: "presentation",
+							time: now,
+							action: `start`
+						});
+						participant.status = "synced";
+					}
+					if(participant.status === "synced" && participant._deleted) {
+						owner.events.push({
+							type: "presentation",
+							time: now,
+							action: `stop`
+						});
+						this.participants.delete(participant.id);
+					}
+				}
 			} else {
 				const hash = this.store.hash(`${participant.name}-${participant.avatar}`);
 				const old = existing.find(x => x.dataId === hash);
@@ -174,7 +207,7 @@ class Meeting {
 				if(participant.status === "synced" && participant._deleted) {
 					participant.events.push({
 						type: "connection",
-						time: Date.now(),
+						time: now,
 						action: `leave (${this.store.hash(participant.id)})`
 					});
 					this.participants.delete(participant.id);
