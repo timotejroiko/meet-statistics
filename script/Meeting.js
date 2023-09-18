@@ -416,6 +416,21 @@ class Meeting {
 			this._tab1_hands_observer.observe(this._tab1_hands_node, {
 				childList: true
 			});
+			for(const hand of this._tab1_hands_node.children) {
+				const id = hand.getAttribute("data-participant-id");
+				if(id) {
+					const user = this.participants.get(id);
+					if(user && user instanceof Participant) {
+						if(!user._hand_node) {
+							user.events.push({
+								time: Date.now(),
+								type: "hand",
+								action: "up"
+							});
+						}
+					}
+				}
+			}
 		} else {
 			console.error(new MeetStatisticsError("tab1_hands_node not found"));
 		}
@@ -679,11 +694,27 @@ class Meeting {
 	}
 	
 	/**
-	 * @param {MutationRecord[]} event 
+	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
 	_onTab1HandsMutation(event) {
 		if(this._debug) {
 			console.log("tab1 hand event", this, event)
+		}
+		const ev = event.find(x => x.addedNodes.length);
+		if(ev) {
+			const id = ev.addedNodes[0].getAttribute("data-participant-id");
+			if(id) {
+				const user = this.participants.get(id);
+				if(user && user instanceof Participant) {
+					if(!user._hand_node) {
+						user.events.push({
+							time: Date.now(),
+							type: "hand",
+							action: "up"
+						});
+					}
+				}
+			}
 		}
 	}
 	
