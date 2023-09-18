@@ -10,9 +10,11 @@ class Participant {
 		this.subname = null;
 		this.self = false;
 
+		this.status = null;
+		this.created = Date.now();
+
 		this.meeting = meeting;
-		this.events = [];
-		this.hash = "";
+		/** @type {Awaited<ReturnType<Store.getParticipantData>>} */ this.events = [];
 
 		this._main_node = null;
 		this._tab_node = null;
@@ -34,7 +36,6 @@ class Participant {
 
 		this._mic_status = false;
 		this._cam_status = false;
-		this._is_presentation = false;
 		this._voice_status = -1;
 		this._voice_stop_timeout = 5000;
 	}
@@ -171,7 +172,7 @@ class Participant {
 		this._emoji_observer = null;
 		this._emoji_node = null;
 
-		this._main_node = null
+		this._main_node = null;
 
 		if(this._voice_status > -1 && !this._tab_node) {
 			clearTimeout(this._voice_status);
@@ -407,7 +408,7 @@ class Participant {
 			this.events.push({
 				time: Date.now(),
 				type: "emoji",
-				action: ev.addedNodes[0].getAttribute("data-emoji")
+				action: ev.addedNodes[0].getAttribute("data-emoji") || "?"
 			});
 		}
 	}
@@ -484,5 +485,85 @@ class Participant {
 				action: "stop"
 			});
 		}, this._voice_stop_timeout);
+	}
+}
+
+class Presentation {
+	/**
+	 * @param {string} id 
+	 * @param {Meeting} meeting 
+	 */
+	constructor(id, meeting) {
+		this.id = id;
+		this.name = null;
+		this.avatar = null;
+		this.meeting = meeting;
+
+		this.status = null;
+		this.created = Date.now();
+
+		this._main_node = null;
+		this._tab_node = null;
+	}
+	get _debug() {
+		return this.meeting._debug;
+	}
+
+	get _deleted() {
+		if(this.meeting._grid_node) {
+			if(this.meeting._tab1_contributors_node) {
+				return !this._main_node && !this._tab_node;
+			} else {
+				return !this._main_node;
+			}
+		} else {
+			if(this.meeting._tab1_contributors_node) {
+				return !this._tab_node;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	/**
+	 * @param {Element} node 
+	 */
+	attachMain(node) {
+		this._main_node = node;
+		this.name ||= node.querySelector("div[jsslot] div[style]")?.textContent || null;
+		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		
+		if(this._debug) {
+			console.log(`participant ${this.name} main attached`);
+		}
+	}
+
+	detachMain() {
+		this._main_node = null;
+
+		if(this._debug) {
+			console.log(`participant ${this.name} main detached`);
+		}
+	}
+
+	/**
+	 * @param {Element} node 
+	 */
+	attachTab(node) {
+		this._tab_node = node;
+		this.name ||= node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
+		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		
+		if(this._debug) {
+			console.log(`participant ${this.name} tab attached`);
+		}
+	}
+	
+	detachTab() {
+		this._tab_node = null;
+
+		if(this._debug) {
+			console.log(`participant ${this.name} tab detached`);
+		}
 	}
 }

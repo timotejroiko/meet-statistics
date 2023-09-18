@@ -12,7 +12,7 @@ class Meeting {
 	 * @param {typeof Store} store 
 	 */
 	constructor(info, options, store) {
-		/** @type {Map<string, Participant>} */ this.participants = new Map();
+		/** @type {Map<string, Participant | Presentation>} */ this.participants = new Map();
 		this.info = info;
 		this.options = options;
 		this.store = store;
@@ -42,7 +42,6 @@ class Meeting {
 		
 		this._interval = -1;
 		this._self_name = null;
-		this._first_sync = true;
 	}
 	
 	get active() {
@@ -60,7 +59,7 @@ class Meeting {
 	get _self() {
 		if(!this._self_name) {
 			for(const participant of this.participants.values()) {
-				if(participant.self) {
+				if(participant instanceof Participant && participant.self) {
 					let you;
 					if(participant._main_node) {
 						you = participant._main_node.querySelector("div[data-self-name]")?.getAttribute("data-self-name");
@@ -138,64 +137,71 @@ class Meeting {
 			await chrome.storage.local.set({ list });
 		}
 		const existing = await this.store.listMeetingParticipants(this.info.dataId);
-		this.participants.forEach(participant => {
-			let hash = participant.hash;
-			let isnew = false;
-			if(!hash) {
-				hash = participant.hash = this.store.hash(`${participant.name}-${participant.avatar}`);
-				isnew = true;
-			}
-			const old = existing.find(x => x.dataId === hash);
-			if(old) {
-				if(participant.subname && old.subname !== participant.subname) {
-					old.subname = participant.subname;
-				}
-				if(participant.self && old.self !== participant.self) {
-					old.self = participant.self;
-				}
-				old.lastSeen = now;
-				if(isnew && !this._first_sync) {
+		for(const participant of this.participants.values()) {
+			if(participant instanceof Presentation) {
+
+			} else {
+				const hash = this.store.hash(`${participant.name}-${participant.avatar}`);
+				const old = existing.find(x => x.dataId === hash);
+				if(old) {
+					if(participant.subname && !old.subname) {
+						old.subname = participant.subname;
+					}
+					old.lastSeen = now;
+					if(participant.status === "gridevent" || participant.status === "tabevent") {
+						participant.events.unshift({
+							type: "connection",
+							time: participant.created,
+							action: `join (${this.store.hash(participant.id)})`
+						});
+					}
+				} else {
+					existing.push({
+						name: participant.name || "",
+						avatar: participant.avatar || "",
+						subname: participant.subname || "",
+						self: participant.self,
+						firstSeen: now,
+						lastSeen: now,
+						dataId: hash
+					});
 					participant.events.unshift({
 						type: "connection",
-						date: Date.now(),
+						time: participant.created,
 						action: `join (${this.store.hash(participant.id)})`
 					});
 				}
-				if(participant._deleted && !this._first_sync) {
+				if(participant.status === "synced" && participant._deleted) {
 					participant.events.push({
 						type: "connection",
-						date: Date.now(),
+						time: Date.now(),
 						action: `leave (${this.store.hash(participant.id)})`
 					});
 					this.participants.delete(participant.id);
 				}
-			} else {
-				existing.push({
-					name: participant.name || "",
-					avatar: participant.avatar || "",
-					subname: participant.subname || "",
-					self: participant.self,
-					firstSeen: now,
-					lastSeen: now,
-					dataId: hash
-				});
+				if(participant.status !== "synced") {
+					participant.status = "synced";
+				}
+				if(participant.events.length) {
+					this.store.getParticipantData(this.info.dataId, hash).then(data => {
+						if(data[data.length - 1]?.type === "connection" && data[data.length - 1].action.startsWith("leave")) {
+							if(participant.events[0].type !== "connection" || !participant.events[0].action.startsWith("join")) {
+								participant.events.unshift({
+									type: "connection",
+									time: participant.created,
+									action: `join (${this.store.hash(participant.id)})`
+								});
+							}
+						}
+						data.push(...participant.events);
+						participant.events.length = 0;
+						return this.store.updateParticipantData(this.info.dataId, hash, data);
+					}).catch(console.error);
+				}
 			}
-			
-			if(participant.events.length) {
-				(async () => {
-					const data = await this.store.getParticipantData(this.info.dataId, hash);
-					data.push(...participant.events);
-					participant.events.length = 0;
-					await this.store.updateParticipantData(this.info.dataId, hash, data);
-				})().catch(console.error);
-			}
-			
-		});
+		}
 		await this.store.updateParticipants(this.info.dataId, existing);
 		this.options = await this.store.getOptions();
-		if(this._first_sync) {
-			this._first_sync = false;
-		}
 	}
 	
 	_attachMain() {
@@ -238,18 +244,19 @@ class Meeting {
 				if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
 					const id = node.firstElementChild?.getAttribute("data-participant-id");
 					if(!id) { continue; }
-					// @ts-ignore
-					const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
-					if(ispresentation) {
-						continue;
-					}
 					const existing = this.participants.get(id);
 					if(existing) {
 						if(!existing._main_node) {
 							existing.attachMain(node);
+						} else if(existing._main_node !== node) {
+							existing.detachMain();
+							existing.attachMain(node);
 						}
 					} else {
-						const participant = new Participant(id, this);
+						// @ts-ignore
+						const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
+						const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
+						participant.status = "grid";
 						participant.attachMain(node);
 						this.participants.set(id, participant);
 					}
@@ -420,18 +427,19 @@ class Meeting {
 					console.error(new MeetStatisticsError("tab1 data-participant-id not found"));
 					continue;
 				}
-				// @ts-ignore
-				const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
-				if(ispresentation) {
-					continue;
-				}
 				const existing = this.participants.get(id);
 				if(existing) {
 					if(!existing._tab_node) {
 						existing.attachTab(node);
+					} else if(existing._tab_node !== node) {
+						existing.detachTab();
+						existing.attachTab(node);
 					}
 				} else {
-					const participant = new Participant(id, this);
+					// @ts-ignore
+					const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
+					const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
+					participant.status = "tab";
 					participant.attachTab(node);
 					this.participants.set(id, participant);
 				}
@@ -500,18 +508,19 @@ class Meeting {
 			if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
 				const id = node.firstElementChild?.getAttribute("data-participant-id");
 				if(!id) { continue; }
-				// @ts-ignore
-				const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
-				if(ispresentation) {
-					continue;
-				}
 				const existing = this.participants.get(id);
 				if(existing) {
 					if(!existing._main_node) {
 						existing.attachMain(node);
+					} else if(existing._main_node !== node) {
+						existing.detachMain();
+						existing.attachMain(node);
 					}
 				} else {
-					const participant = new Participant(id, this);
+					// @ts-ignore
+					const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
+					const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
+					participant.status = "gridevent";
 					participant.attachMain(node);
 					this.participants.set(id, participant);
 				}
@@ -544,11 +553,11 @@ class Meeting {
 		const emoji = blob.querySelector("img")?.getAttribute("alt");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
-			if((participant.name === name || (participant.self && name === this._self)) && !participant._main_node) {
+			if(participant instanceof Participant && (participant.name === name || (participant.self && name === this._self)) && !participant._main_node) {
 				participant.events.push({
 					type: "emoji",
 					time: now,
-					action: emoji
+					action: emoji || "?"
 				});
 			}
 		}
@@ -576,11 +585,11 @@ class Meeting {
 		const content = inode?.parentElement?.parentElement?.nextElementSibling?.textContent;
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
-			if((participant.self && author === this._self) || participant.name === author) {
+			if(participant instanceof Participant && ((participant.self && author === this._self) || participant.name === author)) {
 				participant.events.push({
 					type: "chat",
-					date: now,
-					action: content
+					time: now,
+					action: content || ""
 				});
 				break;
 			}
@@ -606,11 +615,11 @@ class Meeting {
 		const author = node?.parentElement?.parentElement?.parentElement?.getAttribute("data-sender-name");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
-			if((participant.self && author === this._self) || participant.name === author) {
+			if(participant instanceof Participant && ((participant.self && author === this._self) || participant.name === author)) {
 				participant.events.push({
 					type: "chat",
-					date: now,
-					action: content
+					time: now,
+					action: content || ""
 				});
 				break;
 			}
@@ -685,18 +694,19 @@ class Meeting {
 				console.error(new MeetStatisticsError("tab1 data-participant-id not found"));
 				continue;
 			}
-			// @ts-ignore
-			const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
-			if(ispresentation) {
-				continue;
-			}
 			const existing = this.participants.get(id);
 			if(existing) {
 				if(!existing._tab_node) {
 					existing.attachTab(node);
+				} else if(existing._tab_node !== node) {
+					existing.detachTab();
+					existing.attachTab(node);
 				}
 			} else {
-				const participant = new Participant(id, this);
+				// @ts-ignore
+				const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
+				const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
+				participant.status = "tabevent";
 				participant.attachTab(node);
 				this.participants.set(id, participant);
 			}
