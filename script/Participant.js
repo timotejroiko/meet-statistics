@@ -17,6 +17,7 @@ class Participant {
 		/** @type {Awaited<ReturnType<Store.getParticipantData>>} */ this.events = [];
 
 		this._main_node = null;
+		this._main_observer = null;
 		this._tab_node = null;
 		
 		this._mic_node = null;
@@ -65,6 +66,21 @@ class Participant {
 	 */
 	attachMain(node) {
 		this._main_node = node;
+		const child = this._main_node.firstElementChild;
+		if(child) {
+			this._main_observer = new MutationObserver(() => {
+				this.detachMain();
+				const found = this.meeting._grid_node?.querySelector(`div[data-participant-id="${this.id}"]`)?.parentElement;
+				if(found) {
+					this.attachMain(found);
+				}
+			});
+			this._main_observer.observe(child, {
+				attributes: true,
+				attributeFilter: ["data-participant-id"]
+			});
+		}
+
 		this.name ||= node.querySelector("div[jsslot] div[style]")?.textContent;
 		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 
@@ -172,6 +188,8 @@ class Participant {
 		this._emoji_observer = null;
 		this._emoji_node = null;
 
+		this._main_observer?.disconnect();
+		this._main_observer = null;
 		this._main_node = null;
 
 		if(this._voice_status > -1 && !this._tab_node) {
@@ -502,8 +520,9 @@ class Presentation {
 		this.status = null;
 		this.created = Date.now();
 
-		this._main_node = null;
 		this._tab_node = null;
+		this._main_node = null;
+		this._main_observer = null;
 	}
 	get _debug() {
 		return this.meeting._debug;
@@ -530,6 +549,21 @@ class Presentation {
 	 */
 	attachMain(node) {
 		this._main_node = node;
+		const child = this._main_node.firstElementChild;
+		if(child) {
+			this._main_observer = new MutationObserver(() => {
+				this.detachMain();
+				const found = this.meeting._grid_node?.querySelector(`div[data-participant-id="${this.id}"]`)?.parentElement;
+				if(found) {
+					this.attachMain(found);
+				}
+			});
+			this._main_observer.observe(child, {
+				attributes: true,
+				attributeFilter: ["data-participant-id"]
+			});
+		}
+
 		this.name ||= node.querySelector("div[jsslot] div[style]")?.textContent || null;
 		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		
@@ -539,6 +573,8 @@ class Presentation {
 	}
 
 	detachMain() {
+		this._main_observer?.disconnect();
+		this._main_observer = null;
 		this._main_node = null;
 
 		if(this._debug) {

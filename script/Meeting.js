@@ -281,13 +281,10 @@ class Meeting {
 					if(existing) {
 						if(!existing._main_node) {
 							existing.attachMain(node);
-						} else if(existing._main_node !== node) {
-							existing.detachMain();
-							existing.attachMain(node);
 						}
 					} else {
 						// @ts-ignore
-						const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
+						const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.nextElementSibling.computedStyleMap()?.get("display")?.value !== "none";
 						const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
 						participant.status = "grid";
 						participant.attachMain(node);
@@ -464,13 +461,10 @@ class Meeting {
 				if(existing) {
 					if(!existing._tab_node) {
 						existing.attachTab(node);
-					} else if(existing._tab_node !== node) {
-						existing.detachTab();
-						existing.attachTab(node);
 					}
 				} else {
 					// @ts-ignore
-					const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
+					const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.nextElementSibling.computedStyleMap()?.get("display")?.value !== "none";
 					const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
 					participant.status = "tab";
 					participant.attachTab(node);
@@ -545,13 +539,10 @@ class Meeting {
 				if(existing) {
 					if(!existing._main_node) {
 						existing.attachMain(node);
-					} else if(existing._main_node !== node) {
-						existing.detachMain();
-						existing.attachMain(node);
 					}
 				} else {
 					// @ts-ignore
-					const ispresentation = !(node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value !== "none");
+					const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.nextElementSibling.computedStyleMap()?.get("display")?.value !== "none";
 					const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
 					participant.status = "gridevent";
 					participant.attachMain(node);
@@ -731,13 +722,10 @@ class Meeting {
 			if(existing) {
 				if(!existing._tab_node) {
 					existing.attachTab(node);
-				} else if(existing._tab_node !== node) {
-					existing.detachTab();
-					existing.attachTab(node);
 				}
 			} else {
 				// @ts-ignore
-				const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.computedStyleMap()?.get("display")?.value === "none";
+				const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.nextElementSibling.computedStyleMap()?.get("display")?.value !== "none";
 				const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
 				participant.status = "tabevent";
 				participant.attachTab(node);
