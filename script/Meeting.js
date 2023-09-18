@@ -41,6 +41,8 @@ class Meeting {
 		this._tab2_chat_observer = null;
 		
 		this._interval = -1;
+		this._grid_timer = -1;
+		this._grid_delay = 5000;
 		this._self_name = null;
 	}
 	
@@ -548,7 +550,12 @@ class Meeting {
 		for(const user of this.participants.values()) {
 			user.detachMain();
 		}
-		setTimeout(() => {
+		if(this._grid_timer > -1) {
+			clearTimeout(this._grid_timer)
+		}
+		// avoid issues caused by UI lag when starting/ending presentations
+		this._grid_timer = setTimeout(() => {
+			this._grid_timer = -1;
 			if(!this._grid_node) {
 				return;
 			}
@@ -571,35 +578,7 @@ class Meeting {
 					}
 				}
 			}
-		}, 5000);
-		/*
-		const found = [];
-		for(const node of this._grid_node.children) {
-			if(node.classList[0] === this._grid_node.firstElementChild?.classList[0]) {
-				const id = node.firstElementChild?.getAttribute("data-participant-id");
-				if(!id) { continue; }
-				const existing = this.participants.get(id);
-				if(existing) {
-					if(!existing._main_node) {
-						existing.attachMain(node);
-					}
-				} else {
-					// @ts-ignore
-					const ispresentation = node.querySelector("svg")?.parentElement?.parentElement?.nextElementSibling.computedStyleMap()?.get("display")?.value !== "none";
-					const participant = ispresentation ? new Presentation(id, this) : new Participant(id, this);
-					participant.status = "gridevent";
-					participant.attachMain(node);
-					this.participants.set(id, participant);
-				}
-				found.push(id);
-			}
-		}
-		this.participants.forEach(x => {
-			if(!found.includes(x.id)) {
-				x.detachMain();
-			};
-		});
-		*/
+		}, this._grid_delay);
 	}
 	
 	/**
