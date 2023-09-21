@@ -172,11 +172,7 @@ class Store {
 		const ids = list.map(x => `D-${meetingId}-${x.dataId}`);
 		// @ts-ignore
 		const data = await chrome.storage.local.get(ids);
-		for(const key of Object.keys(data)) {
-			data[key.split("-")[2]] = data[key];
-			delete data[key];
-		}
-		return data;
+		return data || {};
 	}
 
 	/**
