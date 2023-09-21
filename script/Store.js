@@ -173,7 +173,7 @@ class Store {
 		// @ts-ignore
 		const data = await chrome.storage.local.get(ids);
 		for(const key of Object.keys(data)) {
-			data[key.slice(key.indexOf("-"))] = data[key];
+			data[key.split("-")[2]] = data[key];
 			delete data[key];
 		}
 		return data;
