@@ -1,7 +1,27 @@
 <html>
-<body>
-	<h1>Hello Extensions</h1>
-	<script src="../script/Store.js"></script>
-	<script src="main.js"></script>
-</body>
+	<head>
+		<link href="styles.css" rel="stylesheet" type="text/css" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+		
+		<script src="../utils/time.js"></script>
+		<script src="../utils/csvBuilder.js"></script>
+		<script src="../utils/stats.js"></script>
+		<script src="../utils/addTables.js"></script>
+	</head>
+
+	<body>
+		<h3 id="title"></h3>
+		<button id="download">Download CSV</button>
+		<table class="tableData">
+			<tr>
+				<th>Participant</th>
+				<th><span class="material-symbols-outlined">mic</span></th>
+				<th><span class="material-symbols-outlined">videocam</span></th>
+				<th><span class="material-symbols-outlined">add_reaction</span></th>
+			</tr>
+		</table>
+
+		<script src="../script/Store.js"></script>
+		<script src="main.js"></script>
+	</body>
 </html>

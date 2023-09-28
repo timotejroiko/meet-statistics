@@ -1,19 +1,28 @@
-(async () => {
+const title = document.querySelector("#title");
+const tableData = document.querySelector(".tableData");
+
+const interval = setInterval(async () => {
     const meeting = await getCurrent();
+
     if(meeting) {
+        title.innerText = meeting.title || "";
+        tableData.style.display = "block";
+
         meeting["participants"] = await Store.listMeetingParticipants(meeting.dataId);
         for(const participant of meeting["participants"]) {
             participant.data = await Store.getParticipantData(meeting.dataId, participant.dataId);
+            addTableData(tableData, participant); 
         }
-        const elem = document.createElement("pre");
-        elem.innerText = JSON.stringify(meeting, null, "\t");
-        document.body.appendChild(elem);
     } else {
-        const elem = document.createElement("p");
-        elem.innerText = "Start a Meeting to display stats";
+        const elem = document.createElement("div");
+        const text = document.createElement("b");
+        text.innerText = "Start a Meeting to display stats";
+
+        elem.appendChild(text);
         document.body.appendChild(elem);
+        clearInterval(interval);
     }
-})();
+}, 1000);
 
 /**
  * @returns {Promise<Awaited<ReturnType<Store.listMeetings>>[0] | undefined>}
@@ -26,5 +35,5 @@ async function getCurrent() {
     });
     const title = tab.title;
     const list = await Store.listMeetings();
-    return list.find(x => x.title === title);
+    return list.findLast(x => x.title === title);
 }
