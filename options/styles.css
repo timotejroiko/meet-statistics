@@ -20,6 +20,10 @@ body {
     margin-right: 5px;
 }
 
-.table, #download {
+.table {
     display: none;
+}
+
+.download {
+    cursor: pointer;
 }

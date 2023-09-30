@@ -22,6 +22,16 @@ function addMeetingsTableData(tableData, meetings) {
             elemsArray.push(elem);
         }
 
+        let downloadBtn = document.querySelector(`#${queryId} td.download`);
+        if (!downloadBtn) {
+            downloadBtn = document.createElement("td");
+            downloadBtn.id = `#btn-${queryId}`;
+            downloadBtn.className = "download";
+            downloadBtn.addEventListener("click", () => downloadJSON(meet["participants"]));
+        }
+        downloadBtn.innerHTML = "<span class='material-symbols-outlined'>download</span>";
+        elemsArray.push(downloadBtn);
+
         const rowElem = document.querySelector(`#${queryId}`);
         if (!rowElem) {
             const newRow = document.createElement("tr");
@@ -81,41 +91,12 @@ function addTableData(tableData, participant) {
         elemsArray.push(elem);
     }
 
-    // let timeElem = document.querySelector(`#${queryId} td.talk`);
-    // if (!timeElem) {
-    //     timeElem = document.createElement("td");
-    //     timeElem.className = "talk";
-    // }
-    // timeElem.textContent = timeTalking;
-
-    // let camElem = document.querySelector(`#${queryId} td.cam`);
-    // if (!camElem) {
-    //     camElem = document.createElement("td");
-    //     camElem.className = "cam";
-    // }
-    // camElem.textContent = timeCameraOn;
-
-    // let reactElem = document.querySelector(`#${queryId} td.react`);
-    // if (!reactElem) {
-    //     reactElem = document.createElement("td");
-    //     reactElem.className = "react";
-    // }
-    // reactElem.textContent = reactNum;
-
-    // let chatElem = document.querySelector(`#${queryId} td.chat`);
-    // if (!chatElem) {
-    //     chatElem = document.createElement("td");
-    //     chatElem.className = "chat";
-    // }
-    // chatElem.textContent = chatNum;
-
     const rowElem = document.querySelector(`#${queryId}`);
     if (!rowElem) {
         const newRow = document.createElement("tr");
         newRow.id = queryId;
         newRow.className = "participant";
 
-        // newRow.append(infoElem, timeElem, camElem, reactElem);
         newRow.append(...elemsArray);
 
         tableData.append(newRow);
