@@ -1,4 +1,5 @@
-const tableData = document.querySelector(".tableData");
+const table = document.querySelector(".table");
+const tableData = document.querySelector(".table tbody");
 
 (async () => {
     const list = await Store.listMeetings();
@@ -9,12 +10,14 @@ const tableData = document.querySelector(".tableData");
         }
     }
 
+    console.log(list);
+
     // const elem = document.createElement("pre");
     // elem.innerText = JSON.stringify(list, null, "\t");
     // document.body.appendChild(elem);
 
     if(list.length > 0) {
-        tableData.style.display = "block";
+        table.style.display = "table";
         addMeetingsTableData(tableData, list);
     } else {
         const elem = document.createElement("div");

@@ -1,14 +1,21 @@
 const title = document.querySelector("#title");
-const tableData = document.querySelector(".tableData");
+const csvButton = document.querySelector("#btn-csv");
+const jsonButton = document.querySelector("#btn-json");
+const table = document.querySelector(".table");
+const tableData = document.querySelector(".table tbody");
+let participants = [];
 
 const interval = setInterval(async () => {
     const meeting = await getCurrent();
 
     if(meeting) {
         title.innerText = meeting.title || "";
-        tableData.style.display = "block";
+        csvButton.style.display = "block";
+        jsonButton.style.display = "block";
+        table.style.display = "table";
 
         meeting["participants"] = await Store.listMeetingParticipants(meeting.dataId);
+        participants = meeting["participants"];
         for(const participant of meeting["participants"]) {
             participant.data = await Store.getParticipantData(meeting.dataId, participant.dataId);
             addTableData(tableData, participant); 
@@ -37,3 +44,34 @@ async function getCurrent() {
     const list = await Store.listMeetings();
     return list.findLast(x => x.title === title);
 }
+
+csvButton.addEventListener('click', async () => {
+    const aggStats = [];
+
+    for (let part of participants) {
+        const talkNum = getTimeTalking(part);
+        const camNum = getTimeWithCameraOn(part);
+        const reactNum = totalReactionsDuringCall(part);
+
+        const timeTalking = milliToHHMMSS(talkNum);
+        const timeCameraOn = milliToHHMMSS(camNum);
+
+        aggStats.push({
+            "Name": part["name"],
+            "First Seen At": milliToBrazilLocale(part["firstSeen"]),
+            "Last Seen At": milliToBrazilLocale(part["lastSeen"]),
+            "Interaction (talking)": talkNum > 0,
+            "Time Talking": timeTalking,
+            "Interaction (camera)": camNum > 30 * 60000,
+            "Camera On During": timeCameraOn,
+            "Interaction (emojis)": reactNum > 0,
+            "Total Reactions": totalReactionsDuringCall(part),
+            "Total Chat Interactions": totalChatInteractions(part),
+        });
+    }
+
+    const csvData = csvBuilder(aggStats);
+    downloadCSV(csvData);
+});
+
+jsonButton.addEventListener('click', () => downloadJSON(participants));

@@ -1,29 +1,16 @@
 body {
-    height: 100%;
-    width: 100%;
-    min-width: 200px;
+    min-width: 500px;
+    max-height: 500px;
+    overflow: scroll;
     font-family: system-ui, -apple-system,
     /* Firefox supports this but not yet `system-ui` */
     'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
 }
 
-/* .container {
-    display: flex;
-    flex-direction: column;
-} */
-
 #title {
+    margin-top: 10px;
     font-size: 1.25rem;
     font-weight: 700;
-}
-
-.participant {
-    /* padding: 5px 10px; */
-    /* border: 1px solid #cccccc; */
-    /* border-radius: 15px; */
-    border-bottom: 1px solid #cccccc;
-    font-size: 8px;
-    margin-bottom: 5px;
 }
 
 .info {
@@ -31,23 +18,17 @@ body {
     align-items: center;
 }
 
-th {
-    text-transform: uppercase;
-    font-size: 11px;
-    text-align: left;
-}
-
-td {
-    max-width: 200px;
-    text-align: center;
-}
-
 .avatar {
     border-radius: 50%;
-    width: 10%;
+    width: 30%;
     margin-right: 5px;
 }
 
-.tableData, #download {
+.table, #btn-csv, #btn-json {
     display: none;
+}
+
+.btns-div {
+    display: flex;
+    justify-content: space-between;
 }
