@@ -19,7 +19,7 @@
 	"content_scripts": [
 		{
 			"js": [
-				"script/Store.js",
+				"utils/Store.js",
 				"script/Participant.js",
 				"script/Meeting.js",
 				"script/index.js"
