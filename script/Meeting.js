@@ -44,6 +44,7 @@ class Meeting {
 		this._grid_timer = -1;
 		this._grid_delay = 5000;
 		this._self_name = null;
+		this._self_participant = null;
 	}
 	
 	get active() {
@@ -71,6 +72,7 @@ class Meeting {
 					}
 					if(you) {
 						this._self_name = you;
+						this._self_participant = participant;
 					}
 				}
 			}
@@ -134,7 +136,11 @@ class Meeting {
 		const meeting = list.find(x => x.dataId === this.info.dataId);
 		if(meeting) {
 			meeting.lastSeen = now;
-			meeting.title = document.title;
+			meeting.title = (document.title?.length || 0) > (meeting.title?.length || 0) ? document.title : meeting.title;
+			if(this._self && this._self_participant) {
+				const participant = this._self_participant;
+				meeting.self = `${participant.name}-${participant.avatar}`;
+			}
 			// @ts-ignore
 			await chrome.storage.local.set({ list });
 		}
@@ -195,7 +201,6 @@ class Meeting {
 						name: participant.name || "",
 						avatar: participant.avatar || "",
 						subname: participant.subname || "",
-						self: participant.self,
 						firstSeen: now,
 						lastSeen: now,
 						dataId: hash

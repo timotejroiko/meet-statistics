@@ -85,6 +85,7 @@ class Store {
 			dataId: Store.hash(`${id}-${now.toString(36)}`),
 			firstSeen: now,
 			lastSeen: now,
+			self: ""
 		};
 		if(update) {
 			list.push(obj);
@@ -100,7 +101,8 @@ class Store {
 	 * 		title: string,
 	 * 		dataId: string,
 	 * 		firstSeen: number,
-	 * 		lastSeen: number
+	 * 		lastSeen: number,
+	 * 		self: string
 	 * }[]>}
 	 */
 	static async listMeetings() {
@@ -136,7 +138,6 @@ class Store {
 	 * @param {{
 	 * 		name: string,
 	 * 		subname: string,
-	 * 		self: boolean,
 	 * 		avatar: string,
 	 * 		firstSeen: number,
 	 * 		lastSeen: number,
