@@ -81,8 +81,20 @@ class Participant {
 			});
 		}
 
-		this.name ||= node.querySelector("div[jsslot] div[style]")?.textContent;
-		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		const name = node.querySelector("div[jsslot] div[style]")?.textContent;
+		if(name) {
+			const words = name.split(/\s+/g);
+			this.name = words.map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+		} else {
+			console.error(new MeetStatisticsError("name not found"));
+		}
+
+		const avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		if(avatar) {
+			this.avatar = avatar;
+		} else {
+			console.error(new MeetStatisticsError("avatar not found"));
+		}
 
 		if(!this.self && !node.querySelector('button[disabled]')) {
 			this.self = true;
@@ -211,15 +223,27 @@ class Participant {
 	 */
 	attachTab(node) {
 		this._tab_node = node;
-		this.name ||= node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
-		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+
+		const name = node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
+		if(name) {
+			const words = name.split(/\s+/g);
+			this.name = words.map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+		} else {
+			console.error(new MeetStatisticsError("name not found"));
+		}
+
+		const avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		if(avatar) {
+			this.avatar = avatar;
+		} else {
+			console.error(new MeetStatisticsError("avatar not found"));
+		}
+
 		this.subname ||= node.querySelector("img")?.parentElement?.nextElementSibling?.lastElementChild?.textContent;
 
 		const selfmic = node.querySelector("div[data-use-tooltip]");
 		if(selfmic) {
-			if(!this.self) {
-				this.self = true;
-			}
+			this.self = true;
 
 			this._tab_mic_node = selfmic;
 			this._tab_mic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
@@ -249,6 +273,8 @@ class Participant {
 				console.error(new MeetStatisticsError("tab_voice_node not found"));
 			}
 		} else {
+			this.self = false;
+			
 			this._tab_mic_node = node.lastElementChild?.firstElementChild;
 			if(this._tab_mic_node) {
 				this._tab_mic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
