@@ -15,7 +15,7 @@
 		}
 	},
 	"options_page": "options/index.html",
-	"permissions": ["storage", "activeTab"],
+	"permissions": ["storage", "unlimitedStorage", "activeTab"],
 	"content_scripts": [
 		{
 			"js": [
