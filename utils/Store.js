@@ -40,7 +40,7 @@ chrome.storage.local = AsyncMap<{
  * @typedef {{
  * 		type: string,
  * 		time: number,
- * 		data: string
+ * 		data?: string
  * }} EventData
  */
 
@@ -208,7 +208,7 @@ class Store {
 			return {
 				type: mapped[x[0]],
 				time: (x.charCodeAt(1) << 24) + (x.charCodeAt(2) << 16) + (x.charCodeAt(3) << 8) + x.charCodeAt(4),
-				data: x.slice(5)
+				...x.length > 5 ? { data: x.slice(5) } : {}
 			}
 		});
 	}
@@ -224,7 +224,7 @@ class Store {
 			return {
 				type: mapped[x[0]],
 				time: (x.charCodeAt(1) << 24) + (x.charCodeAt(2) << 16) + (x.charCodeAt(3) << 8) + x.charCodeAt(4),
-				data: x.slice(5)
+				...x.length > 5 ? { data: x.slice(5) } : {}
 			}
 		})) && a, {});
 	}
