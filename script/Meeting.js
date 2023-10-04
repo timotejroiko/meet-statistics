@@ -184,7 +184,7 @@ class Meeting {
 					if(participant.subname && !old.subname) {
 						old.subname = participant.subname;
 					}
-					old.lastSeen = now;
+					old.lastSeen = now - this.info.firstSeen;
 					if(participant.status === "gridevent" || participant.status === "tabevent") {
 						participant.events.unshift(participant.encodeEvent("join", participant.created, this.store.hash(participant.id)));
 					}
@@ -193,8 +193,8 @@ class Meeting {
 						name: participant.name || "",
 						avatar: participant.avatar || "",
 						subname: participant.subname || "",
-						firstSeen: now,
-						lastSeen: now,
+						firstSeen: now - this.info.firstSeen,
+						lastSeen: now - this.info.firstSeen,
 						dataId: hash
 					});
 					participant.events.push(participant.encodeEvent("join", participant.created, this.store.hash(participant.id)));
