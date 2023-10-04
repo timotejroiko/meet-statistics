@@ -131,7 +131,9 @@ class Meeting {
 	}
 
 	async syncData() {
+		this.options = await this.store.getOptions();
 		const now = Date.now();
+
 		const list = await this.store.listMeetings();
 		const meeting = list.find(x => x.dataId === this.info.dataId);
 		if(meeting) {
@@ -139,12 +141,14 @@ class Meeting {
 			meeting.title = (document.title?.length || 0) > (meeting.title?.length || 0) ? document.title : meeting.title;
 			if(this._self && this._self_participant) {
 				const participant = this._self_participant;
-				meeting.self = `${participant.name}-${participant.avatar}`;
+				meeting.self = this.store.hash(`${participant.name}-${participant.avatar}`);
 			}
 			// @ts-ignore
-			await chrome.storage.local.set({ list });
+			await Store.setRaw({ list }).catch(console.error);
 		}
+
 		const existing = await this.store.listMeetingParticipants(this.info.dataId);
+		const dataUpdates = [];
 		for(const participant of this.participants.values()) {
 			if(participant instanceof Presentation) {
 				let owner;
@@ -165,19 +169,11 @@ class Meeting {
 				}
 				if(owner) {
 					if(participant.status !== "synced") {
-						owner.events.push({
-							type: "presentation",
-							time: now,
-							action: `start`
-						});
+						owner.events.push(owner.encodeEvent("presentation on", now));
 						participant.status = "synced";
 					}
 					if(participant.status === "synced" && participant._deleted) {
-						owner.events.push({
-							type: "presentation",
-							time: now,
-							action: `stop`
-						});
+						owner.events.push(owner.encodeEvent("presentation off", now));
 						this.participants.delete(participant.id);
 					}
 				}
@@ -190,11 +186,7 @@ class Meeting {
 					}
 					old.lastSeen = now;
 					if(participant.status === "gridevent" || participant.status === "tabevent") {
-						participant.events.unshift({
-							type: "connection",
-							time: participant.created,
-							action: `join (${this.store.hash(participant.id)})`
-						});
+						participant.events.unshift(participant.encodeEvent("join", participant.created, this.store.hash(participant.id)));
 					}
 				} else {
 					existing.push({
@@ -205,43 +197,41 @@ class Meeting {
 						lastSeen: now,
 						dataId: hash
 					});
-					participant.events.unshift({
-						type: "connection",
-						time: participant.created,
-						action: `join (${this.store.hash(participant.id)})`
-					});
+					participant.events.push(participant.encodeEvent("join", participant.created, this.store.hash(participant.id)));
 				}
 				if(participant.status === "synced" && participant._deleted) {
-					participant.events.push({
-						type: "connection",
-						time: now,
-						action: `leave (${this.store.hash(participant.id)})`
-					});
+					participant.events.push(participant.encodeEvent("leave", now, this.store.hash(participant.id)));
 					this.participants.delete(participant.id);
 				}
 				if(participant.status !== "synced") {
 					participant.status = "synced";
 				}
 				if(participant.events.length) {
-					this.store.getParticipantData(this.info.dataId, hash).then(data => {
-						if(data[data.length - 1]?.type === "connection" && data[data.length - 1].action.startsWith("leave")) {
-							if(participant.events[0].type !== "connection" || !participant.events[0].action.startsWith("join")) {
-								participant.events.unshift({
-									type: "connection",
-									time: participant.created,
-									action: `join (${this.store.hash(participant.id)})`
-								});
-							}
-						}
-						data.push(...participant.events);
-						participant.events.length = 0;
-						return this.store.updateParticipantData(this.info.dataId, hash, data);
-					}).catch(console.error);
+					dataUpdates.push({hash, participant});
 				}
 			}
 		}
+
+		if(dataUpdates.length) {
+			const list = await this.store.getMultipleParticipantEncodedData(this.info.dataId, dataUpdates.map(x => x.hash));
+			for(let i = 0; i < dataUpdates.length; i++) {
+				const hash = dataUpdates[i].hash;
+				const participant = dataUpdates[i].participant;
+				const fullId = `D-${this.info.dataId}-${hash}`;
+				let data = list[fullId];
+				if(!data) {
+					data = list[fullId] = [];
+				}
+				if(data.length && data[data.length - 1]?.[0] === Store.eventTypes.leave && participant.events[0]?.[0] !== Store.eventTypes.join) {
+					participant.events.unshift(participant.encodeEvent("join", participant.created, this.store.hash(participant.id)));
+				}
+				data.push(...participant.events);
+				participant.events.length = 0;
+			}
+			await this.store.setRaw(list);
+		}
+
 		await this.store.updateParticipants(this.info.dataId, existing);
-		this.options = await this.store.getOptions();
 	}
 	
 	_attachMain() {
@@ -429,11 +419,7 @@ class Meeting {
 					const user = this.participants.get(id);
 					if(user && user instanceof Participant) {
 						if(!user._hand_node) {
-							user.events.push({
-								time: Date.now(),
-								type: "hand",
-								action: "up"
-							});
+							user.events.push(user.encodeEvent("hand", Date.now()));
 						}
 					}
 				}
@@ -601,16 +587,12 @@ class Meeting {
 		if(!blob) {
 			return;
 		}
-		const name = blob.nextElementSibling?.textContent;
+		const name = blob.nextElementSibling?.textContent?.split(/\s+/g).map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
 		const emoji = blob.querySelector("img")?.getAttribute("alt");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
 			if(participant instanceof Participant && (participant.name === name || (participant.self && name === this._self)) && !participant._main_node) {
-				participant.events.push({
-					type: "emoji",
-					time: now,
-					action: emoji || "?"
-				});
+				participant.events.push(participant.encodeEvent("emoji", now, emoji || "?"));
 			}
 		}
 	}
@@ -633,16 +615,12 @@ class Meeting {
 		if(!inode) {
 			return;
 		}
-		const author = inode?.parentElement?.nextElementSibling?.textContent;
+		const author = inode?.parentElement?.nextElementSibling?.textContent?.split(/\s+/g).map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
 		const content = inode?.parentElement?.parentElement?.nextElementSibling?.textContent;
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
 			if(participant instanceof Participant && ((participant.self && author === this._self) || participant.name === author)) {
-				participant.events.push({
-					type: "chat",
-					time: now,
-					action: content || ""
-				});
+				participant.events.push(participant.encodeEvent("chat", now, this.options.track_message_content ? content || "" : ""));
 				break;
 			}
 		}
@@ -664,15 +642,11 @@ class Meeting {
 			return;
 		}
 		const content = node?.textContent;
-		const author = node?.parentElement?.parentElement?.parentElement?.getAttribute("data-sender-name");
+		const author = node?.parentElement?.parentElement?.previousElementSibling?.firstElementChild?.textContent?.split(/\s+/g).map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
 			if(participant instanceof Participant && ((participant.self && author === this._self) || participant.name === author)) {
-				participant.events.push({
-					type: "chat",
-					time: now,
-					action: content || ""
-				});
+				participant.events.push(participant.encodeEvent("chat", now, this.options.track_message_content ? content || "" : ""));
 				break;
 			}
 		}
@@ -720,11 +694,7 @@ class Meeting {
 				const user = this.participants.get(id);
 				if(user && user instanceof Participant) {
 					if(!user._hand_node) {
-						user.events.push({
-							time: Date.now(),
-							type: "hand",
-							action: "up"
-						});
+						user.events.push(user.encodeEvent("hand", Date.now()));
 					}
 				}
 			}

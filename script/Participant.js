@@ -14,7 +14,7 @@ class Participant {
 		this.created = Date.now();
 
 		this.meeting = meeting;
-		/** @type {Awaited<ReturnType<Store.getParticipantData>>} */ this.events = [];
+		/** @type {string[]} */ this.events = [];
 
 		this._main_node = null;
 		this._main_observer = null;
@@ -60,6 +60,17 @@ class Participant {
 			}
 		}
 	}
+
+	/**
+	 * @param {keyof Store.eventTypes} type 
+	 * @param {number} time 
+	 * @param {string} action 
+	 */
+	encodeEvent(type, time, action = "") {
+		let temp = time - this.meeting.info.firstSeen;
+		const base256 = String.fromCharCode(temp >> 24, (temp >> 16) & 255, (temp >> 8) & 255, temp & 255);
+		return `${Store.eventTypes[type]}${base256}${action}`;
+	}
 	
 	/**
 	 * @param {Element} node 
@@ -83,20 +94,22 @@ class Participant {
 
 		const name = node.querySelector("div[jsslot] div[style]")?.textContent;
 		if(name) {
-			const words = name.split(/\s+/g);
-			this.name = words.map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+			if(!this.name) {
+				const words = name.split(/\s+/g);
+				this.name = words.map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+			}
 		} else {
 			console.error(new MeetStatisticsError("name not found"));
 		}
 
 		const avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		if(avatar) {
-			this.avatar = avatar;
+			this.avatar ||= avatar;
 		} else {
 			console.error(new MeetStatisticsError("avatar not found"));
 		}
 
-		if(!this.self && !node.querySelector('button[disabled]')) {
+		if(!this._tab_node && !node.querySelector('button[disabled]') && !this.self) {
 			this.self = true;
 		}
 		
@@ -110,11 +123,7 @@ class Participant {
 			const micstatus = this._mic_node.classList.length === 2;
 			if(micstatus !== this._mic_status) {
 				this._mic_status = micstatus;
-				this.events.push({
-					time: Date.now(),
-					type: "mic",
-					action: micstatus ? "enabled" : "disabled"
-				});
+				this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
 			}
 		} else {
 			console.error(new MeetStatisticsError("mic_node not found"));
@@ -142,11 +151,7 @@ class Participant {
 			const camstatus = this._cam_node.classList.length !== 2;
 			if(camstatus !== this._cam_status) {
 				this._cam_status = camstatus;
-				this.events.push({
-					time: Date.now(),
-					type: "cam",
-					action: camstatus ? "opened" : "closed"
-				});
+				this.events.push(this.encodeEvent(camstatus ? "cam on" : "cam off", Date.now()));
 			}
 		} else {
 			console.error(new MeetStatisticsError("cam_node not found"));
@@ -206,11 +211,7 @@ class Participant {
 
 		if(this._voice_status > -1 && !this._tab_node) {
 			clearTimeout(this._voice_status);
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "stop"
-			});
+			this.events.push(this.encodeEvent("voice off", Date.now()));
 		}
 
 		if(this._debug) {
@@ -226,17 +227,19 @@ class Participant {
 
 		const name = node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
 		if(name) {
-			const words = name.split(/\s+/g);
-			this.name = words.map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+			if(!this.name) {
+				const words = name.split(/\s+/g);
+				this.name = words.map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+			}
 		} else {
-			console.error(new MeetStatisticsError("name not found"));
+			console.error(new MeetStatisticsError("tab name not found"));
 		}
 
 		const avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
 		if(avatar) {
-			this.avatar = avatar;
+			this.avatar ||= avatar;
 		} else {
-			console.error(new MeetStatisticsError("avatar not found"));
+			console.error(new MeetStatisticsError("tab avatar not found"));
 		}
 
 		this.subname ||= node.querySelector("img")?.parentElement?.nextElementSibling?.lastElementChild?.textContent;
@@ -255,11 +258,7 @@ class Participant {
 			const micstatus = this._tab_mic_node.classList.length === 1;
 			if(micstatus !== this._mic_status) {
 				this._mic_status = micstatus;
-				this.events.push({
-					time: Date.now(),
-					type: "mic",
-					action: micstatus ? "enabled" : "disabled"
-				});
+				this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
 			}
 
 			this._tab_voice_node = this._tab_mic_node?.lastElementChild;
@@ -274,7 +273,7 @@ class Participant {
 			}
 		} else {
 			this.self = false;
-			
+
 			this._tab_mic_node = node.lastElementChild?.firstElementChild;
 			if(this._tab_mic_node) {
 				this._tab_mic_observer = new MutationObserver(this._onTabmicMutation.bind(this));
@@ -284,11 +283,7 @@ class Participant {
 				const micstatus = this._tab_mic_node.querySelector("i")?.parentElement?.classList.length === 2;
 				if(micstatus !== this._mic_status) {
 					this._mic_status = micstatus;
-					this.events.push({
-						time: Date.now(),
-						type: "mic",
-						action: micstatus ? "enabled" : "disabled"
-					});
+					this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
 				}
 				if(micstatus) {
 					this.attachTabNotselfVoice();
@@ -316,11 +311,7 @@ class Participant {
 
 		if(this._voice_status > -1 && !this._main_node) {
 			clearTimeout(this._voice_status);
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "stop"
-			});
+			this.events.push(this.encodeEvent("voice off", Date.now()));
 		}
 
 		if(this._debug) {
@@ -366,17 +357,9 @@ class Participant {
 		if(!this._mic_status && this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 			this._voice_status = -1;
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "stop"
-			});
+			this.events.push(this.encodeEvent("voice off", Date.now()));
 		}
-		this.events.push({
-			time: Date.now(),
-			type: "mic",
-			action: this._mic_status ? "enabled" : "disabled"
-		});
+		this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
 	}
 	
 	/**
@@ -392,19 +375,11 @@ class Participant {
 		if(this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 		} else {
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "start"
-			});
+			this.events.push(this.encodeEvent("voice on", Date.now()));
 		}
 		this._voice_status = setTimeout(() => {
 			this._voice_status = -1;
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "stop"
-			});
+			this.events.push(this.encodeEvent("voice off", Date.now()));
 		}, this._voice_stop_timeout);
 	}
 	
@@ -416,11 +391,7 @@ class Participant {
 			console.log("cam event", this, event);
 		}
 		this._cam_status = event[0].target.classList.length !== 2;
-		this.events.push({
-			time: Date.now(),
-			type: "cam",
-			action: this._cam_status ? "opened" : "closed"
-		});
+		this.events.push(this.encodeEvent(this._cam_status ? "cam on" : "cam off", Date.now()));
 	}
 	
 	/**
@@ -432,11 +403,7 @@ class Participant {
 		}
 		const ev = event.find(x => x.addedNodes.length && x.addedNodes[0].nodeName === "I");
 		if(ev) {
-			this.events.push({
-				time: Date.now(),
-				type: "hand",
-				action: "up"
-			});
+			this.events.push(this.encodeEvent("hand", Date.now()));
 		}
 	}
 
@@ -449,11 +416,7 @@ class Participant {
 		}
 		const ev = event.find(x => x.addedNodes.length && x.target.nodeName === "HTML-BLOB");
 		if(ev) {
-			this.events.push({
-				time: Date.now(),
-				type: "emoji",
-				action: ev.addedNodes[0].getAttribute("data-emoji") || "?"
-			});
+			this.events.push(this.encodeEvent("emoji", Date.now(), ev.addedNodes[0].getAttribute("data-emoji") || "?"));
 		}
 	}
 	
@@ -486,17 +449,9 @@ class Participant {
 		if(!this._mic_status && this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 			this._voice_status = -1;
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "stop"
-			});
+			this.events.push(this.encodeEvent("voice off", Date.now()));
 		}
-		this.events.push({
-			time: Date.now(),
-			type: "mic",
-			action: this._mic_status ? "enabled" : "disabled"
-		});
+		this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
 	}	
 	
 	/**
@@ -515,19 +470,11 @@ class Participant {
 		if(this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 		} else {
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "start"
-			});
+			this.events.push(this.encodeEvent("voice on", Date.now()));
 		}
 		this._voice_status = setTimeout(() => {
 			this._voice_status = -1;
-			this.events.push({
-				time: Date.now(),
-				type: "voice",
-				action: "stop"
-			});
+			this.events.push(this.encodeEvent("voice off", Date.now()));
 		}, this._voice_stop_timeout);
 	}
 }
@@ -590,8 +537,19 @@ class Presentation {
 			});
 		}
 
-		this.name ||= node.querySelector("div[jsslot] div[style]")?.textContent || null;
-		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		const name = node.querySelector("div[jsslot] div[style]")?.textContent || null;
+		if(name) {
+			this.name ||= name.split(/\s+/g).map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+		} else {
+			console.error(new MeetStatisticsError("presentation name not found"));
+		}
+
+		const avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		if(avatar) {
+			this.avatar ||= avatar;
+		} else {
+			console.error(new MeetStatisticsError("presentation avatar not found"));
+		}
 		
 		if(this._debug) {
 			console.log(`presentation ${this.name} main attached`);
@@ -613,8 +571,20 @@ class Presentation {
 	 */
 	attachTab(node) {
 		this._tab_node = node;
-		this.name ||= node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
-		this.avatar ||= node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+
+		const name = node.querySelector("img")?.parentElement?.nextElementSibling?.firstElementChild?.firstElementChild?.textContent;
+		if(name) {
+			this.name ||= name.split(/\s+/g).map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+		} else {
+			console.error(new MeetStatisticsError("presentation tab name not found"));
+		}
+
+		const avatar = node.querySelector("img")?.getAttribute("src")?.split("=")[0];
+		if(avatar) {
+			this.avatar ||= avatar;
+		} else {
+			console.error(new MeetStatisticsError("presentation tab avatar not found"));
+		}
 		
 		if(this._debug) {
 			console.log(`presentation ${this.name} tab attached`);
