@@ -155,15 +155,6 @@ class Store {
 	}
 
 	/**
-	 * @param {MeetingData[]} list 
-	 * @returns 
-	 */
-	static async updateMeetings(list) {
-		// @ts-ignore
-		return chrome.storage.local.set({ list });
-	}
-
-	/**
 	 * @param {string} dataId 
 	 * @return {Promise<ParticipantData[]>}
 	 */
@@ -175,20 +166,10 @@ class Store {
 	}
 
 	/**
-	 * @param {string[]} dataIds 
-	 * @return {Promise<Record<string,ParticipantData[]>>}
-	 */
-	static async listAllMeetingsParticipants(dataIds) {
-		// @ts-ignore
-		const list = await chrome.storage.local.get(dataIds.map(x => `P-${x}`));
-		return list;
-	}
-
-	/**
 	 * @param {string} meetingId 
 	 * @param {ParticipantData[]} data 
 	 */
-	static updateParticipants(meetingId, data) {
+	static updateMeetingParticipants(meetingId, data) {
 		// @ts-ignore
 		return chrome.storage.local.set({
 			[`P-${meetingId}`]: data
@@ -214,22 +195,6 @@ class Store {
 	}
 
 	/**
-	 * @param {string} meetingId 
-	 * @return {Promise<Record<string,EventData[]>>}
-	 */
-	static async getAllParticipantsData(meetingId) {
-		const data = await Store.getAllParticipantsEncodedData(meetingId);
-		const mapped = Object.entries(Store.eventTypes).reduce((a, t) => (a[t[1]] = t[0]) && a, {});
-		return Object.keys(data).reduce((a, t) => (a[t] = data[t].map(x => {
-			return {
-				type: mapped[x[0]],
-				time: (x.charCodeAt(1) << 24) + (x.charCodeAt(2) << 16) + (x.charCodeAt(3) << 8) + x.charCodeAt(4),
-				...x.length > 5 ? { data: x.slice(5) } : {}
-			}
-		})) && a, {});
-	}
-
-	/**
 	 * 
 	 * @param {string} meetingId 
 	 * @param {string} participantId 
@@ -248,57 +213,10 @@ class Store {
 	 * @param {string[]} participantIds 
 	 * @returns {Promise<Record<string, string[]>>}
 	 */
-	static async getMultipleParticipantEncodedData(meetingId, participantIds) {
+	static async getMultipleParticipantsEncodedData(meetingId, participantIds) {
 		// @ts-ignore
 		const data = await chrome.storage.local.get(participantIds.map(x => `D-${meetingId}-${x}`));
 		return data;
-	}
-
-	/**
-	 * @param {string} meetingId 
-	 * @return {Promise<Record<string, string[]>>}
-	 */
-	static async getAllParticipantsEncodedData(meetingId) {
-		const list = await Store.listMeetingParticipants(meetingId);
-		const ids = list.map(x => `D-${meetingId}-${x.dataId}`);
-		// @ts-ignore
-		const data = await chrome.storage.local.get(ids);
-		return data || {};
-	}
-
-	/**
-	 * 
-	 * @param {string} meetingId 
-	 * @param {string} participantId 
-	 * @param {string[]} data 
-	 * @returns 
-	 */
-	static updateParticipantData(meetingId, participantId, data) {
-		// @ts-ignore
-		return chrome.storage.local.set({
-			[`D-${meetingId}-${participantId}`]: data
-		});
-	}
-
-	/**
-	 * 
-	 * @param {string} meetingId 
-	 * @param {Record<string, string[]>} data 
-	 * @returns 
-	 */
-	static updateAllParticipantsData(meetingId, data) {
-		const mapped = Object.keys(data).reduce((a, t) => (a[`D-${meetingId}-${t}`] = data[t]) && a, {});
-		// @ts-ignore
-		return chrome.storage.local.set(mapped);
-	}
-
-	/**
-	 * @param {string[]} keys 
-	 * @returns 
-	 */
-	static getRaw(keys) {
-		// @ts-ignore
-		return chrome.storage.local.get(keys);
 	}
 
 	/**

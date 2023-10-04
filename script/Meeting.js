@@ -213,7 +213,7 @@ class Meeting {
 		}
 
 		if(dataUpdates.length) {
-			const list = await this.store.getMultipleParticipantEncodedData(this.info.dataId, dataUpdates.map(x => x.hash));
+			const list = await this.store.getMultipleParticipantsEncodedData(this.info.dataId, dataUpdates.map(x => x.hash));
 			for(let i = 0; i < dataUpdates.length; i++) {
 				const hash = dataUpdates[i].hash;
 				const participant = dataUpdates[i].participant;
@@ -231,7 +231,7 @@ class Meeting {
 			await this.store.setRaw(list);
 		}
 
-		await this.store.updateParticipants(this.info.dataId, existing);
+		await this.store.updateMeetingParticipants(this.info.dataId, existing);
 	}
 	
 	_attachMain() {
