@@ -123,7 +123,9 @@ class Participant {
 			const micstatus = this._mic_node.classList.length === 2;
 			if(micstatus !== this._mic_status) {
 				this._mic_status = micstatus;
-				this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
+				if(this.meeting.options.track_mic) {
+					this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
+				}
 			}
 		} else {
 			console.error(new MeetStatisticsError("mic_node not found"));
@@ -151,7 +153,9 @@ class Participant {
 			const camstatus = this._cam_node.classList.length !== 2;
 			if(camstatus !== this._cam_status) {
 				this._cam_status = camstatus;
-				this.events.push(this.encodeEvent(camstatus ? "cam on" : "cam off", Date.now()));
+				if(this.meeting.options.track_cam) {
+					this.events.push(this.encodeEvent(camstatus ? "cam on" : "cam off", Date.now()));
+				}
 			}
 		} else {
 			console.error(new MeetStatisticsError("cam_node not found"));
@@ -211,7 +215,9 @@ class Participant {
 
 		if(this._voice_status > -1 && !this._tab_node) {
 			clearTimeout(this._voice_status);
-			this.events.push(this.encodeEvent("voice off", Date.now()));
+			if(this.meeting.options.track_voice) {
+				this.events.push(this.encodeEvent("voice off", Date.now()));
+			}
 		}
 
 		if(this._debug) {
@@ -258,7 +264,9 @@ class Participant {
 			const micstatus = this._tab_mic_node.classList.length === 1;
 			if(micstatus !== this._mic_status) {
 				this._mic_status = micstatus;
-				this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
+				if(this.meeting.options.track_mic) {
+					this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
+				}
 			}
 
 			this._tab_voice_node = this._tab_mic_node?.lastElementChild;
@@ -283,7 +291,9 @@ class Participant {
 				const micstatus = this._tab_mic_node.querySelector("i")?.parentElement?.classList.length === 2;
 				if(micstatus !== this._mic_status) {
 					this._mic_status = micstatus;
-					this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
+					if(this.meeting.options.track_mic) {
+						this.events.push(this.encodeEvent(micstatus ? "mic on" : "mic off", Date.now()));
+					}
 				}
 				if(micstatus) {
 					this.attachTabNotselfVoice();
@@ -311,7 +321,9 @@ class Participant {
 
 		if(this._voice_status > -1 && !this._main_node) {
 			clearTimeout(this._voice_status);
-			this.events.push(this.encodeEvent("voice off", Date.now()));
+			if(this.meeting.options.track_voice) {
+				this.events.push(this.encodeEvent("voice off", Date.now()));
+			}
 		}
 
 		if(this._debug) {
@@ -357,9 +369,13 @@ class Participant {
 		if(!this._mic_status && this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 			this._voice_status = -1;
-			this.events.push(this.encodeEvent("voice off", Date.now()));
+			if(this.meeting.options.track_voice) {
+				this.events.push(this.encodeEvent("voice off", Date.now()));
+			}
 		}
-		this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
+		if(this.meeting.options.track_mic) {
+			this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
+		}
 	}
 	
 	/**
@@ -374,12 +390,14 @@ class Participant {
 		}
 		if(this._voice_status > -1) {
 			clearTimeout(this._voice_status);
-		} else {
+		} else if(this.meeting.options.track_voice) {
 			this.events.push(this.encodeEvent("voice on", Date.now()));
 		}
 		this._voice_status = setTimeout(() => {
 			this._voice_status = -1;
-			this.events.push(this.encodeEvent("voice off", Date.now()));
+			if(this.meeting.options.track_voice) {
+				this.events.push(this.encodeEvent("voice off", Date.now()));
+			}
 		}, this._voice_stop_timeout);
 	}
 	
@@ -391,7 +409,9 @@ class Participant {
 			console.log("cam event", this, event);
 		}
 		this._cam_status = event[0].target.classList.length !== 2;
-		this.events.push(this.encodeEvent(this._cam_status ? "cam on" : "cam off", Date.now()));
+		if(this.meeting.options.track_cam) {
+			this.events.push(this.encodeEvent(this._cam_status ? "cam on" : "cam off", Date.now()));
+		}
 	}
 	
 	/**
@@ -402,7 +422,7 @@ class Participant {
 			console.log("hand event", this, event);
 		}
 		const ev = event.find(x => x.addedNodes.length && x.addedNodes[0].nodeName === "I");
-		if(ev) {
+		if(ev && this.meeting.options.track_hands) {
 			this.events.push(this.encodeEvent("hand", Date.now()));
 		}
 	}
@@ -415,7 +435,7 @@ class Participant {
 			console.log("emoji event", this, event);
 		}
 		const ev = event.find(x => x.addedNodes.length && x.target.nodeName === "HTML-BLOB");
-		if(ev) {
+		if(ev && this.meeting.options.track_reactions) {
 			this.events.push(this.encodeEvent("emoji", Date.now(), ev.addedNodes[0].getAttribute("data-emoji") || "?"));
 		}
 	}
@@ -449,9 +469,13 @@ class Participant {
 		if(!this._mic_status && this._voice_status > -1) {
 			clearTimeout(this._voice_status);
 			this._voice_status = -1;
-			this.events.push(this.encodeEvent("voice off", Date.now()));
+			if(this.meeting.options.track_voice) {
+				this.events.push(this.encodeEvent("voice off", Date.now()));
+			}
 		}
-		this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
+		if(this.meeting.options.track_mic) {
+			this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
+		}
 	}	
 	
 	/**
@@ -469,12 +493,14 @@ class Participant {
 		}
 		if(this._voice_status > -1) {
 			clearTimeout(this._voice_status);
-		} else {
+		} else if(this.meeting.options.track_voice) {
 			this.events.push(this.encodeEvent("voice on", Date.now()));
 		}
 		this._voice_status = setTimeout(() => {
 			this._voice_status = -1;
-			this.events.push(this.encodeEvent("voice off", Date.now()));
+			if(this.meeting.options.track_voice) {
+				this.events.push(this.encodeEvent("voice off", Date.now()));
+			}
 		}, this._voice_stop_timeout);
 	}
 }

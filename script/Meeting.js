@@ -151,6 +151,9 @@ class Meeting {
 		const dataUpdates = [];
 		for(const participant of this.participants.values()) {
 			if(participant instanceof Presentation) {
+				if(!this.options.track_presentation) {
+					continue;
+				}
 				let owner;
 				if(participant.name) {
 					for(const p of this.participants.values()) {
@@ -413,13 +416,15 @@ class Meeting {
 			this._tab1_hands_observer.observe(this._tab1_hands_node, {
 				childList: true
 			});
-			for(const hand of this._tab1_hands_node.children) {
-				const id = hand.getAttribute("data-participant-id");
-				if(id) {
-					const user = this.participants.get(id);
-					if(user && user instanceof Participant) {
-						if(!user._hand_node) {
-							user.events.push(user.encodeEvent("hand", Date.now()));
+			if(this.options.track_hands) {
+				for(const hand of this._tab1_hands_node.children) {
+					const id = hand.getAttribute("data-participant-id");
+					if(id) {
+						const user = this.participants.get(id);
+						if(user && user instanceof Participant) {
+							if(!user._hand_node) {
+								user.events.push(user.encodeEvent("hand", Date.now()));
+							}
 						}
 					}
 				}
@@ -579,6 +584,9 @@ class Meeting {
 		if(this._debug) {
 			console.log("reaction event", this, event)
 		}
+		if(!this.options.track_reactions) {
+			return;
+		}
 		const ev = event.find(x => x.addedNodes.length);
 		if(!ev) {
 			return;
@@ -603,6 +611,9 @@ class Meeting {
 	_onMessageMutation(event) {
 		if(this._debug) {
 			console.log("message event", this, event)
+		}
+		if(!this.options.track_messages) {
+			return;
 		}
 		if(this._tab2_chat_node) {
 			return;
@@ -632,6 +643,9 @@ class Meeting {
 	_onChatMutation(event) {
 		if(this._debug) {
 			console.log("chat event", this, event)
+		}
+		if(!this.options.track_messages) {
+			return;
 		}
 		const text = event.find(x => x.addedNodes.length);
 		if(!text) {
@@ -686,6 +700,9 @@ class Meeting {
 	_onTab1HandsMutation(event) {
 		if(this._debug) {
 			console.log("tab1 hand event", this, event)
+		}
+		if(!this.options.track_hands) {
+			return;
 		}
 		const ev = event.find(x => x.addedNodes.length);
 		if(ev) {

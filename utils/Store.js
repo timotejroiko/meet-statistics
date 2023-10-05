@@ -57,7 +57,7 @@ class Store {
 		track_voice: true,
 		track_reactions: true,
 		track_messages: true,
-		track_message_content: true,
+		track_message_content: false,
 		track_hands: true,
 		track_presentation: true
 	}
@@ -125,7 +125,7 @@ class Store {
 			if(update) {
 				existing.lastSeen = now;
 				// @ts-ignore
-				await Store.updateMeetings(list);
+				await chrome.storage.local.set({ list });
 			}
 			return existing;
 		}
@@ -140,7 +140,7 @@ class Store {
 		if(update) {
 			list.push(obj);
 			// @ts-ignore
-			await Store.updateMeetings(list);
+			await chrome.storage.local.set({ list });
 		}
 		return obj;
 	}
@@ -205,6 +205,28 @@ class Store {
 		// @ts-ignore
 		const data = await chrome.storage.local.get(id);
 		return data[id] || [];
+	}
+
+	/**
+	 * 
+	 * @param {string} meetingId 
+	 * @param {string[]} participantIds 
+	 * @returns {Promise<Record<string, EventData[]>>}
+	 */
+	static async getMultipleParticipantsData(meetingId, participantIds) {
+		const data = await Store.getMultipleParticipantsEncodedData(meetingId, participantIds);
+		const types = Object.entries(Store.eventTypes).reduce((a, t) => (a[t[1]] = t[0]) && a, {});
+		return Object.entries(data).reduce((a,t) => {
+			const events = t[1].map(x => {
+				return {
+					type: types[x[0]],
+					time: (x.charCodeAt(1) << 24) + (x.charCodeAt(2) << 16) + (x.charCodeAt(3) << 8) + x.charCodeAt(4),
+					...x.length > 5 ? { data: x.slice(5) } : {}
+				}
+			});
+			a[t[0].split("-")[2]] = events;
+			return a;
+		}, {});
 	}
 
 	/**

@@ -1,7 +1,105 @@
 <html>
+	<head>
+		<title>Meet Statistics</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://necolas.github.io/normalize.css/8.0.1/normalize.css" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+		<link rel="stylesheet" href="style.css" />
+	</head>
 <body>
-	<h1>Hello Extensions</h1>
+	<div class="header">
+		<div class="left">
+			<img src="../img/24.png">
+			<h1>Meet Statistics</h1>
+		</div>
+		<div class="right">
+			<span id="options" class="material-symbols-rounded" title="Settings">settings</span>
+			<a href="/options/index.html" target="_blank">
+				<span class="material-symbols-rounded" title="View all meetings">folder_open</span>
+			</a>
+		</div>
+	</div>
+	<div class="container">
+		<div class="no-meeting">
+			<p>Start a meeting to display data</p>
+			<span class="material-symbols-rounded">frame_inspect</span>
+		</div>
+		<div class="meeting" data-id="">
+			<h2 class="title"></h2>
+			<p class="time"></p>
+			<table>
+				<tr>
+					<th><span class="material-symbols-rounded" title="Participant">person</span></th>
+					<th><span class="material-symbols-rounded" title="Attendance time">timer</span></th>
+					<th><span class="material-symbols-rounded" title="Camera time">videocam</span></th>
+					<th><span class="material-symbols-rounded" title="Mic time">mic</span></th>
+					<th><span class="material-symbols-rounded" title="Time speaking">record_voice_over</span></th>
+					<th><span class="material-symbols-rounded" title="Time presenting">iframe</span></th>
+					<th><span class="material-symbols-rounded" title="Hands raised">front_hand</span></th>
+					<th><span class="material-symbols-rounded" title="Emojis sent">mood</span></th>
+					<th><span class="material-symbols-rounded" title="Messages sent">chat</span></th>
+				</tr>
+			</table>
+			<div class="buttons">
+				<div class="button csv">
+					<p>Download CSV</p>
+					<span class="material-symbols-rounded" title="Download CSV">table_rows_narrow</span>
+				</div>
+				<div class="button json">
+					<p>Download JSON</p>
+					<span class="material-symbols-rounded" title="Download JSON">data_object</span>
+				</div>
+				<a href="/options/index.html" target="_blank">
+					<div class="button">
+						<p>View Details</p>
+						<span class="material-symbols-rounded" title="View Details">open_in_new</span>
+					</div>
+				</a>
+			</div>
+		</div>
+		<div class="options">
+			<div class="option" data-option="track_cam">
+				<p>Track Camera</p>
+				<span class="material-symbols-rounded" title="Toggle camera tracking"></span>
+			</div>
+			<div class="option" data-option="track_mic">
+				<p>Track Microphone</p>
+				<span class="material-symbols-rounded" title="Toggle microphone tracking"></span>
+			</div>
+			<div class="option" data-option="track_voice">
+				<p>Track Voice Activity</p>
+				<span class="material-symbols-rounded" title="Toggle voice activity tracking"></span>
+			</div>
+			<div class="option" data-option="track_presentation">
+				<p>Track Presentation</p>
+				<span class="material-symbols-rounded" title="Toggle presentation tracking"></span>
+			</div>
+			<div class="option" data-option="track_hands">
+				<p>Track Hands Up</p>
+				<span class="material-symbols-rounded" title="Toggle hands up tracking"></span>
+			</div>
+			<div class="option" data-option="track_reactions">
+				<p>Track Emojis/Reactions</p>
+				<span class="material-symbols-rounded" title="Toggle emojis/reactions tracking"></span>
+			</div>
+			<div class="option" data-option="track_messages">
+				<p>Track Chat Messages</p>
+				<span class="material-symbols-rounded" title="Toggle chat messages tracking"></span>
+			</div>
+			<div class="option" data-option="track_message_content">
+				<p>Track Chat Messages Content</p>
+				<span class="material-symbols-rounded" title="Toggle chat messages content tracking"></span>
+			</div>
+			<div class="option" data-option="debug">
+				<p>Enable Debug Logs</p>
+				<span class="material-symbols-rounded" title="Toggle debug logs"></span>
+			</div>
+			<div class="ok">OK</div>
+		</div>
+	</div>
 	<script src="../utils/Store.js"></script>
+	<script src="../utils/Utils.js"></script>
 	<script src="main.js"></script>
+	<script src="buttons.js"></script>
 </body>
 </html>

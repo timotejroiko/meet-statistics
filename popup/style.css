@@ -1,0 +1,204 @@
+/* MAIN */
+
+html {
+	height: 0;
+	min-width: 400px;
+}
+
+.container .no-meeting, .container.has-meeting .meeting, .container.has-options .options {
+	display: block;
+}
+
+.container .meeting, .container .options, .container.has-meeting .no-meeting, .container.has-options .meeting, .container.has-options .no-meeting {
+	display: none;
+}
+
+/* HEADER */
+
+.header {
+	display: flex;
+	background-color: lightskyblue;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.header .left, .header .right {
+	display: flex;
+	align-items: center;
+}
+
+.header .left > * {
+	padding-left: 10px;
+}
+
+.header .left h1 {
+	font-size: 1.2rem;
+}
+
+.header .right > * {
+	padding-right: 10px;
+	cursor: pointer;
+}
+
+.header .right a {
+	text-decoration: none;
+	color: black;
+}
+
+/* NO-MEETING BODY */
+
+.no-meeting {
+	padding: 50px;
+	align-items: center;
+	background: lightgray;
+}
+
+.no-meeting p {
+	font-size: 2rem;
+	text-align: center;
+	color: gray;
+	margin: 0 0 20px 0;
+}
+
+.no-meeting span {
+	font-size: 6rem;
+	color: gray;
+	display: block;
+	text-align: center;
+}
+
+/* MEETING BODY */
+
+.meeting {
+	padding-top: 20px;
+}
+
+.meeting .title {
+	text-align: center;
+	margin: 0;
+}
+
+.meeting .time {
+	text-align: center;
+	font-size: 2em;
+	margin: 10px 0 20px 0;
+}
+
+.meeting table {
+	text-align: center;
+	border-spacing: 0px;
+	margin: 10px;
+	border-radius: 5px;
+	overflow: hidden;
+	border: 1px solid #aaa;
+}
+
+.meeting table tr {
+	background: #fff;
+}
+
+.meeting table tr:nth-child(odd) {
+	background: #eee;
+}
+
+.meeting table th {
+	cursor: pointer;
+	padding: 10px 10px;
+	background: #555;
+	color: white;
+}
+
+.meeting table th span {
+	font-size: 20px;
+}
+
+.meeting table td {
+	padding: 0 10px;
+}
+
+.meeting table td:nth-child(1) {
+	display: flex;
+	align-items: center;
+	text-align: left;
+}
+
+.meeting table td:nth-child(1) img {
+	margin: 5px 10px 5px 0;
+	border-radius: 50%;
+	background: gray;
+}
+
+.meeting table td:nth-child(1) p {
+	width: 200px;
+	margin: 0;
+}
+
+.meeting .buttons {
+	display: flex;
+	justify-content: center;
+	padding: 10px 0 20px 0;
+}
+
+.meeting .buttons .button {
+	display: flex;
+	align-items: center;
+	background: #555;
+	color: white;
+	border-radius: 5px;
+	margin: 0 5px;
+	padding: 0px 10px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+.meeting .buttons .button span {
+	margin-left: 5px;
+	font-size: 20px;
+}
+
+.meeting .buttons a {
+	text-decoration: none;
+	color: black;
+}
+
+/* OPTIONS */
+
+.options {
+	padding: 20px 40px;
+	box-sizing: border-box;
+}
+
+.options .option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.options .option p {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: bold;
+}
+
+.options .option span {
+	font-size: 40px;
+	line-height: 30px;
+	color: gray;
+	cursor: pointer;
+}
+
+.options .option[data-enabled="true"] span {
+	color: limegreen;
+}
+
+.options .ok {
+	padding: 10px;
+	cursor: pointer;
+	text-align: center;
+	margin: 30px 50px 20px 50px;
+	background: green;
+	color: white;
+	font-weight: bold;
+	font-size: 16px;
+	border-radius: 50px;
+}
