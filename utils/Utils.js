@@ -21,7 +21,7 @@ class Utils {
 		});
 		const title = tab.title;
 		const list = await Store.listMeetings();
-		return list.find(x => x.title === title);
+		return list.findLast(x => x.title === title);
 	}
 
 	/**
