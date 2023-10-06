@@ -108,6 +108,8 @@ class Meeting {
 				});
 			}
 		}, 1000);
+		// @ts-ignore
+		chrome.storage.onChanged.addListener(this._onStorageUpdate.bind(this));
 		if(this._debug) {
 			console.log("monitoring started");
 		}
@@ -125,13 +127,14 @@ class Meeting {
 		if(this._tab2_node) {
 			this._detachTab2();
 		}
+		// @ts-ignore
+		chrome.storage.onChanged.removeListener(this._onStorageUpdate);
 		if(this._debug) {
 			console.log("monitoring stopped");
 		}
 	}
 
 	async syncData() {
-		this.options = await this.store.getOptions();
 		const now = Date.now();
 
 		const list = await this.store.listMeetings();
@@ -769,5 +772,15 @@ class Meeting {
 				x.detachTab();
 			}
 		});
+	}
+
+	/**
+	 * @param {{ [key: string]: { oldValue: Store.defaultOptions, newValue: Store.defaultOptions } }} changes 
+	 * @param {string} namespace 
+	 */
+	_onStorageUpdate(changes, namespace) {
+		if(namespace === "sync" && changes.meet_options) {
+			this.options = changes.meet_options.newValue;
+		}
 	}
 }
