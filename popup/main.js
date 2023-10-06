@@ -71,16 +71,27 @@ async function loop() {
 			for(let i = 0; i < keys.length; i++) {
 				const key = keys[i];
 				if(updated[key] !== data.calculated[key]) {
-					if(key !== "time") {
-						data.calculated[key] = updated[key];
-					}
+					data.calculated[key] = updated[key];
 					data.node.children[i + 1].textContent = ["time", "cam", "mic", "voice", "presentation"].includes(key) ? Utils.milliToHHMMSS(updated[key]) : updated[key].toString();
 				}
 			}
 		}
 
-		switch(meetingNode.dataset.sort) {
-			default: collection.data.sort((a,b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0); break;
+		if(meetingNode.dataset.sort) {
+			const k = meetingNode.dataset.sort;
+			collection.data.sort((a,b) => {
+				const r = b.calculated[k] - a.calculated[k];
+				if(r === 0) {
+					return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+				}
+				return r;
+			});
+		} else {
+			collection.data.sort((a,b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+		}
+
+		if(meetingNode.dataset.reverse === "true") {
+			collection.data.reverse();
 		}
 
 		for(let i = 0; i < collection.data.length; i++) {

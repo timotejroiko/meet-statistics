@@ -106,6 +106,16 @@ html {
 	padding: 10px 10px;
 	background: #555;
 	color: white;
+	position: relative;
+}
+
+.meeting table th::before {
+    content: attr(data-ui);
+    position: absolute;
+    color: white;
+    font-size: 0.5rem;
+    margin-top: -5px;
+    margin-left: -5px;
 }
 
 .meeting table th span {

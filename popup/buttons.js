@@ -1,6 +1,7 @@
 const optionsButton = /** @type {HTMLElement} */ (document.getElementById("options"));
 const optionsOKButton = /** @type {HTMLElement} */ (document.querySelector(".options .ok"));
 const optionsView = /** @type {HTMLCollectionOf<HTMLElement>} */ (document.getElementsByClassName("option"));
+const tableIcons = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("table th"));
 const csvButton = /** @type {HTMLElement} */ (document.querySelector(".buttons .csv"));
 const jsonButton = /** @type {HTMLElement} */ (document.querySelector(".buttons .json"));
 
@@ -11,6 +12,26 @@ optionsButton.onclick = () => {
 optionsOKButton.onclick = () => {
     containerNode.classList.toggle("has-options");
 };
+
+for(const icon of tableIcons) {
+	icon.onclick = () => {
+		if(meetingNode.dataset.sort === icon.dataset.sort) {
+			const old = meetingNode.dataset.reverse;
+			meetingNode.dataset.reverse = old === "true" ? "false" : "true";
+			icon.dataset.ui = old === "true" ? "▼" : "▲";
+		} else {
+			meetingNode.dataset.sort = icon.dataset.sort;
+			meetingNode.dataset.reverse = "false";
+			icon.dataset.ui = "▼";
+			for(const i of tableIcons) {
+				if(i === icon) {
+					continue;
+				}
+				i.dataset.ui = "";
+			}
+		}
+	}
+}
 
 csvButton.onclick = () => {
 	let csv = `sep=,\n`;
