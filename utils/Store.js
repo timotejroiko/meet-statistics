@@ -78,6 +78,8 @@ class Store {
 		"presentation off": "c"
 	}
 
+	static eventMap = Object.entries(Store.eventTypes).reduce((a, t) => (a[t[1]] = t[0]) && a, {});
+
 	/**
 	 * DJB2 hash, not the best but simple and fast
 	 * @param {string} str 
@@ -184,14 +186,7 @@ class Store {
 	 */
 	static async getParticipantData(meetingId, participantId) {
 		const data = await Store.getParticipantEncodedData(meetingId, participantId);
-		const mapped = Object.entries(Store.eventTypes).reduce((a, t) => (a[t[1]] = t[0]) && a, {});
-		return data.map(x => {
-			return {
-				type: mapped[x[0]],
-				time: (x.charCodeAt(1) << 24) + (x.charCodeAt(2) << 16) + (x.charCodeAt(3) << 8) + x.charCodeAt(4),
-				...x.length > 5 ? { data: x.slice(5) } : {}
-			}
-		});
+		return data.map(x => Store.decodeEvent(x));
 	}
 
 	/**
@@ -215,15 +210,8 @@ class Store {
 	 */
 	static async getMultipleParticipantsData(meetingId, participantIds) {
 		const data = await Store.getMultipleParticipantsEncodedData(meetingId, participantIds);
-		const types = Object.entries(Store.eventTypes).reduce((a, t) => (a[t[1]] = t[0]) && a, {});
 		return Object.entries(data).reduce((a,t) => {
-			const events = t[1].map(x => {
-				return {
-					type: types[x[0]],
-					time: (x.charCodeAt(1) << 24) + (x.charCodeAt(2) << 16) + (x.charCodeAt(3) << 8) + x.charCodeAt(4),
-					...x.length > 5 ? { data: x.slice(5) } : {}
-				}
-			});
+			const events = t[1].map(x => Store.decodeEvent(x));
 			a[t[0].split("-")[2]] = events;
 			return a;
 		}, {});
@@ -239,6 +227,17 @@ class Store {
 		// @ts-ignore
 		const data = await chrome.storage.local.get(participantIds.map(x => `D-${meetingId}-${x}`));
 		return data;
+	}
+
+	/**
+	 * @param {string} x 
+	 */
+	static decodeEvent(x) {
+		return {
+			type: Store.eventMap[x[0]],
+			time: (x.charCodeAt(1) << 24) + (x.charCodeAt(2) << 16) + (x.charCodeAt(3) << 8) + x.charCodeAt(4),
+			...x.length > 5 ? { data: x.slice(5) } : {}
+		}
 	}
 
 	/**
