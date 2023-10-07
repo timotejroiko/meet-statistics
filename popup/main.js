@@ -8,11 +8,13 @@ bindOptionsButtons();
 		const meetingNode = /** @type {HTMLElement} */ (document.querySelector(".meeting"));
 		const titleNode = /** @type {HTMLElement} */ (document.querySelector(".meeting .title"));
 		const timeNode = /** @type {HTMLElement} */ (document.querySelector(".meeting .time"));
+		const pageButton = /** @type {HTMLAnchorElement} */ (document.querySelector(".buttons .page")?.parentElement);
 
 		containerNode.classList.add("has-meeting");
 		meetingNode.dataset.id = meeting.id;
 		titleNode.textContent = meeting.title;
 		timeNode.textContent = Utils.milliToHHMMSS(meeting.lastSeen - meeting.firstSeen);
+		pageButton.href = pageButton.href + `?meeting=${meeting.dataId}`;
 
 		/**
 		 * @type {{

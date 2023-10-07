@@ -1,7 +1,70 @@
 <html>
-<body>
-	<h1>Hello Options</h1>
-	<script src="../utils/Store.js"></script>
-	<script src="main.js"></script>
-</body>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="stylesheet" href="https://necolas.github.io/normalize.css/8.0.1/normalize.css" />
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+		<link rel="stylesheet" href="style.css" />
+		<title>Meet Statistics</title>
+	</head>
+
+	<body>
+		<div id="main">
+			<div class="sidebar">
+				<div class="upper">
+					<div class="logo">
+						<img src="../img/128.png">
+						<h1>Meet Statistics</h1>
+					</div>
+					<div class="menu">
+						<div>
+							<p>History</p>
+							<span class="material-symbols-rounded" title="History">history</span>
+						</div>
+						<div>
+							<p>Settings</p>
+							<span class="material-symbols-rounded" title="Settings">settings</span>
+						</div>
+						<div>
+							<p>Backup / Import</p>
+							<span class="material-symbols-rounded" title="Settings">cloud_download</span>
+						</div>
+						<div class="red">
+							<p>Delete All Data</p>
+							<span class="material-symbols-rounded" title="Settings">delete</span>
+						</div>
+					</div>
+				</div>
+				<div class="lower">
+					<div class="stats">
+						<div>
+							<p>Meetings:</p>
+							<p>0</p>
+						</div>
+						<div>
+							<p>Storage:</p>
+							<p>0KB</p>
+						</div>
+					</div>
+					<div class="about">
+						<p>Meet Statistics version 1.0.0</p>
+						<p>© 2023 Timotej Valentin Rojko</p>
+						<a href="https://github.com/timotejroiko/meet-statistics" target="_blank">View/Contribute on Github</a>
+					</div>
+				</div>
+			</div>
+			<div class="content"></div>
+		</div>
+		<div id="meeting">
+			view meeting details
+		</div>
+		<div id="participant">
+			view participant details
+		</div>
+		<script src="../utils/Store.js"></script>
+		<script src="../utils/Utils.js"></script>
+		<script src="fflate.js"></script>
+		<script src="router.js"></script>
+		<script src="main.js"></script>
+	</body>
 </html>
