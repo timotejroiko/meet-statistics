@@ -29,9 +29,11 @@
 						}
 					} else if(id[0] === "D") {
 						const row = table.get(id.split("-")[2]);
-						const newdata = changes[id].newValue.slice(changes[id].oldValue.length);
-						const decoded = newdata.map(x => Store.decodeEvent(x));
-						row.updateData(decoded);
+						if(row) {
+							const newdata = changes[id].newValue.slice(changes[id].oldValue.length);
+							const decoded = newdata.map(x => Store.decodeEvent(x));
+							row.updateData(decoded);
+						}
 					}
 				}
 				table.render();
