@@ -1,41 +1,17 @@
 
-bindOptionsButtons();
-
 (async () => {
+	bindOptionsButtons();
 	const containerNode = /** @type {HTMLElement} */ (document.querySelector(".container"));
 	const meeting = await Utils.getCurrentMeeting();
 	if(meeting) {
-		const meetingNode = /** @type {HTMLElement} */ (document.querySelector(".meeting"));
-		const titleNode = /** @type {HTMLElement} */ (document.querySelector(".meeting .title"));
-		const timeNode = /** @type {HTMLElement} */ (document.querySelector(".meeting .time"));
-		const pageButton = /** @type {HTMLAnchorElement} */ (document.querySelector(".buttons .page")?.parentElement);
-
 		containerNode.classList.add("has-meeting");
-		meetingNode.dataset.id = meeting.id;
-		titleNode.textContent = meeting.title;
-		timeNode.textContent = Utils.milliToHHMMSS(meeting.lastSeen - meeting.firstSeen);
-		pageButton.href = pageButton.href.split("?")[0] + `?meeting=${meeting.dataId}`;
 
-		/**
-		 * @type {{
-		 * 		data: CollectionData[],
-		 * 		keys: Record<string, CollectionData>
-		 * }}
-		 */
-		const collection = {
-			data: [],
-			keys: {}
-		};
+		const table = new Table(meeting);
+		await table.load();
+		table.render();
 
-		const participants = await Store.listMeetingParticipants(meeting.dataId);
-		const participantsData = await Store.getMultipleParticipantsData(meeting.dataId, participants.map(x => x.dataId));
-		for(const participant of participants) {
-			const data = updateParticipant(participant, collection);
-			const updated = Utils.parseData(participant, participantsData[participant.dataId]);
-			updateParticipantData(data, updated);
-		}
-
-		updateTable(collection, meetingNode.dataset.sort, meetingNode.dataset.reverse === "true");
+		bindDowloadButtons(table);
+		bindTableButtons(table);
 
 		// @ts-ignore
 		chrome.storage.onChanged.addListener((/** @type {Record<string, { oldValue: *, newValue: * }>} */ changes, /** @type {string} */ namespace) => {
@@ -44,44 +20,22 @@ bindOptionsButtons();
 					if(id === "list") {
 						const found = changes.list.newValue.find(x => x.dataId === meeting.dataId);
 						if(found) {
-							Object.assign(meeting, found);
-							timeNode.textContent = Utils.milliToHHMMSS(meeting.lastSeen - meeting.firstSeen);
+							table.update(found);
 						}
 					} else if(id[0] === "P") {
 						for(const participant of changes[id].newValue) {
-							updateParticipant(participant, collection);
+							const row = table.getOrCreateRow(participant);
+							row.update(participant);
 						}
 					} else if(id[0] === "D") {
-						const dataId = id.split("-")[2];
-						const participant = collection.keys[dataId];
-						const updated = Utils.parseData(participant.participant, changes[id].newValue.map(x => Store.decodeEvent(x)));
-						updateParticipantData(participant, updated);
+						const row = table.get(id.split("-")[2]);
+						const newdata = changes[id].newValue.slice(changes[id].oldValue.length);
+						const decoded = newdata.map(x => Store.decodeEvent(x));
+						row.updateData(decoded);
 					}
 				}
-				updateTable(collection, meetingNode.dataset.sort, meetingNode.dataset.reverse === "true");
+				table.render();
 			}
 		});
-
-		bindDowloadButtons();
-		bindTableButtons(collection);
-
 	}
 })();
-
-/**
- * @typedef {{
- * 		name: string,
- * 		calculated: {
- * 			time: number,
- * 			cam: number,
- * 			mic: number,
- * 			voice: number,
- * 			presentation: number,
- * 			hands: number,
- * 			emojis: number,
- * 			texts: number
- * 		}
- * 		node: HTMLElement,
- * 		participant: Awaited<ReturnType<Store.listMeetingParticipants>>[0]
- * }} CollectionData
- */
