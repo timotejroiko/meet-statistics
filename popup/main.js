@@ -31,7 +31,7 @@ bindOptionsButtons();
 		const participantsData = await Store.getMultipleParticipantsData(meeting.dataId, participants.map(x => x.dataId));
 		for(const participant of participants) {
 			const data = updateParticipant(participant, collection);
-			const updated = Utils.parseData(participantsData[participant.dataId]);
+			const updated = Utils.parseData(participant, participantsData[participant.dataId]);
 			updateParticipantData(data, updated);
 		}
 
@@ -54,7 +54,7 @@ bindOptionsButtons();
 					} else if(id[0] === "D") {
 						const dataId = id.split("-")[2];
 						const participant = collection.keys[dataId];
-						const updated = Utils.parseData(changes[id].newValue.map(x => Store.decodeEvent(x)));
+						const updated = Utils.parseData(participant.participant, changes[id].newValue.map(x => Store.decodeEvent(x)));
 						updateParticipantData(participant, updated);
 					}
 				}
@@ -81,6 +81,7 @@ bindOptionsButtons();
  * 			emojis: number,
  * 			texts: number
  * 		}
- * 		node: HTMLElement
+ * 		node: HTMLElement,
+ * 		participant: Awaited<ReturnType<Store.listMeetingParticipants>>[0]
  * }} CollectionData
  */

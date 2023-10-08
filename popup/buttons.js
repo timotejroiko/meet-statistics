@@ -61,7 +61,7 @@ function bindDowloadButtons() {
 			const participantsData = await Store.getMultipleParticipantsData(meeting.dataId, participants.map(x => x.dataId));
 			meeting["participants"] = participants;
 			for(const participant of participants) {
-				participant["data"] = Utils.parseData(participantsData[participant.dataId]);
+				participant["data"] = Utils.parseData(participant, participantsData[participant.dataId]);
 				participant["data"].time = participant.lastSeen - participant.firstSeen;
 				participant["events"] = participantsData[participant.dataId];
 			}

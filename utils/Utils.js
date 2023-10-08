@@ -25,9 +25,10 @@ class Utils {
 	}
 
 	/**
+	 * @param {Awaited<ReturnType<Store.listMeetingParticipants>>[0]} participant 
 	 * @param {Awaited<ReturnType<Store.getParticipantData>>} data
 	 */
-	static parseData(data) {
+	static parseData(participant, data) {
 		const updated = {
 			cam: 0,
 			mic: 0,
@@ -71,6 +72,8 @@ class Utils {
 			if(states[key].on === true) {
 				if(states.leave > states[key].time) {
 					updated[key] += states.leave - states[key].time;
+				} else if(participant.lastSeen > states[key].time) {
+					updated[key] += participant.lastSeen - states[key].time;
 				}
 			}
 		}

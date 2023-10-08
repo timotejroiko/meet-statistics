@@ -7,6 +7,7 @@ function updateParticipant(participant, collection) {
 	}
 	data.calculated.time = participant.lastSeen - participant.firstSeen;
 	data.node.children[1].textContent = Utils.milliToHHMMSS(data.calculated.time);
+    data.participant = participant;
 	return data;
 }
 
