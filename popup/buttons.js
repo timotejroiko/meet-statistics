@@ -39,7 +39,7 @@ function bindDowloadButtons() {
 	const tableView = /** @type {HTMLCollectionOf<HTMLElement>} */ (document.getElementsByClassName("participant"));
 
 	csvButton.onclick = () => {
-		let csv = `sep=,\n`;
+		let csv = "";
 		csv += Array.prototype.map.call(tableNode.querySelectorAll("tr th span"), x => `"${x.getAttribute("title")}"`).join(",") + "\n";
 		for(const row of tableView) {
 			csv += Array.prototype.map.call(row.querySelectorAll("td"), x => `"${x.innerText}"`).join(",") + "\n";
