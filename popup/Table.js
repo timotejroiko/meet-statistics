@@ -1,6 +1,6 @@
 class Table {
     /**
-     * @param {NonNullable<Awaited<ReturnType<Utils.getCurrentMeeting>>>} meeting 
+     * @param {NonNullable<Awaited<ReturnType<getCurrentMeeting>>>} meeting 
      */
     constructor(meeting) {
         this.meeting = meeting;

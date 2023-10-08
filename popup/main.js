@@ -2,7 +2,7 @@
 (async () => {
 	bindOptionsButtons();
 	const containerNode = /** @type {HTMLElement} */ (document.querySelector(".container"));
-	const meeting = await Utils.getCurrentMeeting();
+	const meeting = await getCurrentMeeting();
 	if(meeting) {
 		containerNode.classList.add("has-meeting");
 
@@ -39,3 +39,17 @@
 		});
 	}
 })();
+
+/**
+ * @returns {Promise<Awaited<ReturnType<Store.listMeetings>>[0] | undefined>}
+ */
+async function getCurrentMeeting() {
+	// @ts-ignore
+	const [tab] = await chrome.tabs.query({
+		active: true,
+		currentWindow: true
+	});
+	const title = tab.title;
+	const list = await Store.listMeetings();
+	return list.findLast(x => x.title === title);
+}
