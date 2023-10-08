@@ -14,7 +14,7 @@ bindOptionsButtons();
 		meetingNode.dataset.id = meeting.id;
 		titleNode.textContent = meeting.title;
 		timeNode.textContent = Utils.milliToHHMMSS(meeting.lastSeen - meeting.firstSeen);
-		pageButton.href = pageButton.href + `?meeting=${meeting.dataId}`;
+		pageButton.href = pageButton.href.split("?")[0] + `?meeting=${meeting.dataId}`;
 
 		/**
 		 * @type {{
