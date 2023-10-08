@@ -38,24 +38,40 @@ class Utils {
 			texts: 0
 		}
 		const states = {
-			cam: 0,
-			mic: 0,
-			voice: 0,
-			presentation: 0
+			cam: { on:false, time:0 },
+			mic: { on:false, time:0 },
+			voice: { on:false, time:0 },
+			presentation: { on:false, time:0 },
+			join: 0,
+			leave: 0
 		}
 		for(const event of data) {
-			switch(event.type) {
-				case "cam on": states.cam ||= event.time; break;
-				case "cam off": updated.cam += event.time - states.cam; states.cam = 0; break;
-				case "mic on": states.mic ||= event.time; break;
-				case "mic off": updated.mic += event.time - states.mic; states.mic = 0; break;
-				case "voice on": states.voice ||= event.time; break;
-				case "voice off": updated.voice += event.time - states.voice; states.voice = 0; break;
-				case "presentation on": states.presentation ||= event.time; break;
-				case "presentation off": updated.presentation += event.time - states.presentation; states.presentation = 0; break;
-				case "hand": updated.hands++; break;
-				case "emoji": updated.emojis++; break;
-				case "chat": updated.texts++; break;
+			if(event.type.endsWith("on")) {
+				const ev = event.type.split(" ")[0];
+				if(states[ev].on === false) {
+					states[ev].on = true;
+					states[ev].time = event.time;
+				}
+			} else if(event.type.endsWith("off")) {
+				const ev = event.type.split(" ")[0];
+				updated[ev] += event.time - states[ev].time;
+				states[ev].on = false;
+				states[ev].time = event.time;
+			} else {
+				switch(event.type) {
+					case "hand": updated.hands++; break;
+					case "emoji": updated.emojis++; break;
+					case "chat": updated.texts++; break;
+					case "join": states.join = event.time;
+					case "leave": states.leave = event.time;
+				}
+			}
+		}
+		for(const key of ["cam", "mic", "voice", "presentation"]) {
+			if(states[key].on === true) {
+				if(states.leave > states[key].time) {
+					updated[key] += states.leave - states[key].time;
+				}
 			}
 		}
 		return updated;
