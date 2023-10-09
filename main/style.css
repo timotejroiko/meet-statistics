@@ -95,4 +95,125 @@ body > div.show {
     height: 100vh;
     background: #eee;
     flex-grow: 1;
+    overflow: auto;
+}
+
+#main .container {
+    min-width: 700px;
+    padding: 0 3%;
+}
+
+#main .content h2 {
+    margin: 60px 20px 20px 20px;
+    font-size: 1.6em;
+}
+
+#main .content .toolbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+}
+
+#main .content .search {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+}
+
+#main .content .search input {
+    padding: 5px 10px 5px 30px;
+    font-size: 1.25em;
+    width: 100%;
+}
+
+#main .content .search span {
+    position: absolute;
+    margin-left: 5px;
+    color: #777;
+}
+
+#main .content .actions {
+    display: flex;
+}
+
+#main .content .actions > div {
+    display: flex;
+    align-items: center;
+    padding: 0px 10px;
+    margin-left: 20px;
+    background: lightskyblue;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#main .content .actions span {
+    margin-left: 5px;
+}
+
+#main .container table {
+    width: calc(100% - 40px);
+    margin: 0 20px 40px 20px;
+    background: white;
+    box-shadow: 0 0 5px -3px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    border-spacing: 0;
+    overflow: hidden;
+}
+
+#main .container table th {
+    padding: 0;
+    color: #777;
+    font-size: 0.8em;
+    cursor: pointer;
+    background: #f5f5f5;
+}
+
+#main .container table td {
+    padding: 0;
+    border-top: 1px solid #ddd;
+}
+
+#main .container table th:nth-child(1), #main .container table td:nth-child(1) {
+    width: 15px;
+}
+
+#main .container table th:nth-child(-n+3), #main .container table td:nth-child(-n+3) {
+    text-align: left;
+}
+
+#main .container table th:nth-child(n+4), #main .container table td:nth-child(n+4) {
+    text-align: center;
+    padding: 0 20px;
+}
+
+#main .container table th label, #main .container table td label {
+    padding: 25px 20px;
+    cursor: pointer;
+    display: block;
+}
+
+#main .container table th input, #main .container table td input {
+    cursor: pointer;
+    height: 15px;
+    width: 15px;
+}
+
+#main .container table td p {
+    margin: 0;
+}
+
+#main .container table td:nth-child(2) p:nth-child(2) {
+    color: #777;
+    font-size: 0.8em;
+}
+
+#main .container table td:nth-child(3) p:nth-child(2) {
+    color: #777;
+    font-size: 0.9em;
+}
+
+#main .container table td:nth-child(4) p {
+    display: inline-block;
+    vertical-align: top;
 }
