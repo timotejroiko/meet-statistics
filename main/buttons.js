@@ -2,6 +2,32 @@ function bindMainSidebarButtons() {
     
 }
 
+function bindMainToolbarButtons() {
+    const toolbar = /** @type {HTMLElement} */ (document.querySelector("#main .content .container .toolbar"));
+    const tableView = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("#main .content .container table .participant"));
+
+    const search = /** @type {HTMLInputElement} */ (toolbar.querySelector(".search input"));
+    search.oninput = () => {
+        const val = search.value.toLowerCase();
+        if(val) {
+            for(const row of tableView) {
+                const content = row.querySelectorAll("p");
+                if(Array.prototype.some.call(content, x => x.textContent.toLowerCase().includes(val))) {
+                    row.classList.remove("hide");
+                } else {
+                    row.classList.add("hide");
+                }
+            }
+        } else {
+            for(const row of tableView) {
+                row.classList.remove("hide");
+            }
+        }
+    }
+
+    const actions = /** @type {HTMLElement} */ (toolbar.querySelector(".actions"));
+}
+
 function bindMainTableButtons() {
     const tableNode = /** @type {HTMLElement} */ (document.querySelector("#main .content .container table"));
     tableNode.onclick = async event => {
@@ -9,7 +35,7 @@ function bindMainTableButtons() {
         if(target.closest(".participant")) {
             if(target.closest(".checkbox")) {
                 if(target.tagName === "INPUT") {
-                    checkActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
+                    toggleActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
                 }
             } else if(target.closest(".actions") && target.tagName === "SPAN") {
                 console.log("action")
@@ -29,7 +55,7 @@ function bindMainTableButtons() {
                         const checkbox = /** @type {HTMLInputElement} */ (row.querySelector("input"));
                         checkbox.checked = state.checked;
                     }
-                    checkActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
+                    toggleActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
                 }
             } else {
                 console.log("header")
@@ -41,7 +67,7 @@ function bindMainTableButtons() {
 /**
  * @param {number} l 
  */
-function checkActionButtons(l) {
+function toggleActionButtons(l) {
     const actionNodes = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("#main .content .container .actions > div"));
     if(l > 0) {
         actionNodes[1].classList.remove("disabled");

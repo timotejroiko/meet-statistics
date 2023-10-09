@@ -121,14 +121,17 @@ body > div.show {
 }
 
 #main .content .toolbar .search input {
-    padding: 5px 10px 5px 30px;
+    padding: 0 10px 0 40px;
     font-size: 1.25em;
     width: 100%;
+    border: none;
+    border-radius: 5px;
+    height: 100%;
 }
 
 #main .content .toolbar .search span {
     position: absolute;
-    margin-left: 5px;
+    margin-left: 10px;
     color: #777;
 }
 
@@ -181,6 +184,10 @@ body > div.show {
 
 #main .container table .participant:hover {
     background: #eee;
+}
+
+#main .container table .participant.hide {
+    display: none;
 }
 
 #main .container table th {
