@@ -4,7 +4,8 @@ function bindMainSidebarButtons() {
 
 function bindMainToolbarButtons() {
     const toolbar = /** @type {HTMLElement} */ (document.querySelector("#main .content .container .toolbar"));
-    const tableView = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("#main .content .container table .participant"));
+    const tableNode = /** @type {HTMLElement} */ (document.querySelector("#main .content .container table"));
+    const tableView = /** @type {HTMLCollectionOf<HTMLElement>} */ (tableNode.getElementsByClassName("participant"));
 
     const search = /** @type {HTMLInputElement} */ (toolbar.querySelector(".search input"));
     search.oninput = () => {
@@ -25,7 +26,35 @@ function bindMainToolbarButtons() {
         }
     }
 
-    const actions = /** @type {HTMLElement} */ (toolbar.querySelector(".actions"));
+    const [merge, expor, delet] = /** @type {NodeListOf<HTMLElement>} */ (toolbar.querySelectorAll(".actions > div"));
+    merge.onclick = () => {
+        const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
+        const selected = Array.prototype.map.call(checked, x => x.closest(".participant"));
+    }
+    expor.onclick = () => {
+        const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
+        const selected = Array.prototype.map.call(checked, x => x.closest(".participant"));
+    }
+    delet.onclick = async () => {
+        const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
+        const selected = Array.prototype.map.call(checked, x => x.closest(".participant"));
+        const ok = confirm(`Permanently delete ${selected.length} items?`);
+        if(ok) {
+            const list = await Store.listMeetings();
+            const toDelete = [];
+            for(const row of selected) {
+                const meeting = list.find(x => x.dataId === row.dataset.id);
+                if(meeting) {
+                    const participants = await Store.listMeetingParticipants(meeting.dataId);
+                    toDelete.push(`P-${meeting.dataId}`, ...participants.map(x => `D-${meeting.dataId}-${x.dataId}`));
+                    list.splice(list.indexOf(meeting), 1);
+                    // @ts-ignore
+                    await Promise.all([chrome.storage.local.set({ list }), chrome.storage.local.remove(toDelete)]);
+                    row.remove();
+                }
+            }
+        }
+    }
 }
 
 function bindMainTableButtons() {
