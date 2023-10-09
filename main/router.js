@@ -5,11 +5,9 @@
 function router(meeting = "", participant = "") {
     if(meeting) {
         if(participant) {
-            history.pushState(null, '', `?meeting=${meeting}`);
-            document.title = `Meeting ${meeting}`;
-        } else {
             history.pushState(null, '', `?meeting=${meeting}&participant=${participant}`);
-            document.title = `Meeting ${meeting} - Participant ${participant}`;
+        } else {
+            history.pushState(null, '', `?meeting=${meeting}`);
         }
     }
     const mainNode = /** @type {HTMLElement} */ (document.getElementById("main"));
@@ -26,10 +24,23 @@ function router(meeting = "", participant = "") {
     if(meetID) {
         if(participantID) {
             participantNode.classList.add("show");
+            document.title = `Meeting ${meetID} - Participant ${participantID}`;
         } else {
             meetingNode.classList.add("show");
+            document.title = `Meeting ${meetID}`;
         }
     } else {
         mainNode.classList.add("show");
+    }
+}
+
+function load() {
+    const active = document.querySelector(".show");
+    if(active && !active.classList.contains("loaded")) {
+        switch(active.id) {
+            case "main": return loadMain();
+            case "meeting": return loadMain();
+            case "participant": return loadMain();
+        }
     }
 }

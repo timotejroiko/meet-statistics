@@ -62,33 +62,31 @@
 							<span class="material-symbols-rounded">search</span>
 						</div>
 						<div class="actions">
-							<div>
+							<div class="disabled">
 								<p>View Merged</p>
 								<span class="material-symbols-rounded">compare_arrows</span>
 							</div>
-							<div>
+							<div class="disabled">
 								<p>Export</p>
 								<span class="material-symbols-rounded">cloud_download</span>
 							</div>
-							<div>
+							<div class="disabled delete">
 								<p>Delete</p>
 								<span class="material-symbols-rounded">delete</span>
 							</div>
 						</div>
 					</div>
 					<table>
-						<tr>
-							<th>
-								<label>
-									<input type="checkbox" title="Select All" />
-								</label>
-							</th>
-							<th>MEETING</th>
-							<th>DATE</th>
-							<th>PARTICIPANTS</th>
-							<th>DURATION</th>
-							<th>ACTIONS</th>
-						</tr>
+						<tbody>
+							<tr>
+								<th class="checkbox"><label><input type="checkbox" title="Select All" /></label></th>
+								<th class="left">MEETING</th>
+								<th class="left">DATE</th>
+								<th class="center">PARTICIPANTS</th>
+								<th class="center">DURATION</th>
+								<th class="center">ACTIONS</th>
+							</tr>
+						</tbody>
 					</table>
 				</div>
 			</div>
@@ -101,7 +99,7 @@
 		</div>
 		<script src="../utils/Store.js"></script>
 		<script src="../utils/Utils.js"></script>
-		<script src="fflate.js"></script>
+		<script src="buttons.js"></script>
 		<script src="router.js"></script>
 		<script src="main.js"></script>
 	</body>

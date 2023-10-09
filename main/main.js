@@ -2,21 +2,15 @@
 router();
 load();
 
-function load() {
-    const active = document.querySelector(".show");
-    if(active && !active.classList.contains("loaded")) {
-        switch(active.id) {
-            case "main": return loadMain();
-            case "meeting": return loadMain();
-            case "participant": return loadMain();
-        }
-    }
+window.onpopstate = () => {
+    router();
+    load();
 }
 
 async function loadMain() {
     const mainNode = /** @type {HTMLElement} */ (document.getElementById("main"));
     const statsNode = /** @type {HTMLElement} */ (mainNode.querySelector(".sidebar .lower .stats"));
-    const tableNode = /** @type {HTMLElement} */ (mainNode.querySelector(".content .container table"));
+    const tableNode = /** @type {HTMLElement} */ (mainNode.querySelector(".content .container table tbody"));
     // @ts-ignore
     const stats = await chrome.storage.local.getBytesInUse();
     const meetings = await Store.listMeetings();
@@ -30,7 +24,21 @@ async function loadMain() {
         const d3 = Utils.milliToHHMMSSFull(meeting.lastSeen - meeting.firstSeen);
         const newNode = document.createElement("tr");
         newNode.classList.add("participant");
-        newNode.innerHTML = `<td><label><input type="checkbox"/></label></td><td><p>${meeting.title || "N/A"}</p><p>${meeting.id}</p></td><td><p>${d1}</p><p>${d2}</p></td><td><span class="material-symbols-rounded" title="Participants">person</span><p>${participants.length}</p></td><td><p>${d3}</p></td><td></td>`;
+        newNode.dataset.id = meeting.dataId;
+        let html = `<td class="checkbox"><label><input type="checkbox"/></label></td>`
+            + `<td class="left"><p class="title">${meeting.title || "N/A"}</p><p class="id">${meeting.id}</p></td>`
+            + `<td class="left"><p class="date">${d1}</p><p class="time">${d2}</p></td>`
+            + `<td class="center n"><p>${participants.length}</p><span class="material-symbols-rounded" title="Participants">person</span></td>`
+            + `<td class="center"><p>${d3}</p></td>`
+            + `<td class="center actions">`
+                + `<span class="material-symbols-rounded" title="Download CSV" data-content="CSV">download</span>`
+                + `<span class="material-symbols-rounded" title="Download JSON" data-content="JSON">download</span>`
+                + `<span class="material-symbols-rounded delete" title="Delete">delete</span>`
+            + `</td>`;
+        newNode.innerHTML = html;
         tableNode.appendChild(newNode);
     }
+
+    bindMainSidebarButtons();
+    bindMainTableButtons();
 }
