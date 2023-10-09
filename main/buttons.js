@@ -51,6 +51,7 @@ function bindMainToolbarButtons() {
                     // @ts-ignore
                     await Promise.all([chrome.storage.local.set({ list }), chrome.storage.local.remove(toDelete)]);
                     row.remove();
+                    updateSidebarStats(list.length);
                 }
             }
         }

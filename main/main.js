@@ -10,13 +10,10 @@ window.onpopstate = () => {
 async function loadMain() {
     const mainNode = /** @type {HTMLElement} */ (document.getElementById("main"));
     if(!mainNode.classList.contains("loaded")) {
-        const statsNode = /** @type {HTMLElement} */ (mainNode.querySelector(".sidebar .lower .stats"));
         const tableNode = /** @type {HTMLElement} */ (mainNode.querySelector(".content .container table tbody"));
         // @ts-ignore
-        const stats = await chrome.storage.local.getBytesInUse();
         const meetings = await Store.listMeetings();
-        statsNode.children[0].children[1].textContent = meetings.length.toString();
-        statsNode.children[1].children[1].textContent = `${(stats / 1024).toFixed(2)}KB`;
+        updateSidebarStats(meetings.length);
         for(const meeting of meetings.reverse()) {
             const participants = await Store.listMeetingParticipants(meeting.dataId);
             const date = new Date(meeting.firstSeen);
@@ -46,4 +43,18 @@ async function loadMain() {
 
         mainNode.classList.add("loaded");
     }
+}
+
+/**
+ * 
+ * @param {number} [length] 
+ * @param {number} [size] 
+ */
+async function updateSidebarStats(length, size) {
+    // @ts-ignore
+    const s = typeof size !== "number" ? await chrome.storage.local.getBytesInUse() : size;
+    const l = typeof length !=="number" ? (await Store.listMeetings()).length : length;
+    const statsNode = /** @type {HTMLElement} */ (document.querySelector("#main .sidebar .lower .stats"));
+    statsNode.children[0].children[1].textContent = l.toString();
+    statsNode.children[1].children[1].textContent = `${(s / 1024).toFixed(2)}KB`;
 }
