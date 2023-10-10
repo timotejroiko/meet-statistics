@@ -37,6 +37,7 @@ function bindOptionsButtons() {
 function bindDowloadButtons(table) {
 	const csvButton = /** @type {HTMLElement} */ (document.querySelector(".buttons .csv"));
 	const jsonButton = /** @type {HTMLElement} */ (document.querySelector(".buttons .json"));
+	const pdfButton = /** @type {HTMLElement} */ (document.querySelector(".buttons .pdf"));
 
 	csvButton.onclick = () => {
 		let csv = "";
@@ -46,7 +47,7 @@ function bindDowloadButtons(table) {
 		}
 		const link = document.createElement('a');
 		link.href = `data:text/plain,${csv}`;
-		link.download = `${table.titleNode.textContent}.csv`;
+		link.download = `${table.titleNode.textContent}_${new Date().getTime()}.csv`;
 		link.dispatchEvent(new MouseEvent('click', { 
 			bubbles: true, 
 			cancelable: true, 
@@ -65,12 +66,30 @@ function bindDowloadButtons(table) {
 		}
 		const link = document.createElement('a');
 		link.href = `data:text/plain,${JSON.stringify(meeting)}`;
-		link.download = `${table.titleNode.textContent}.json`;
+		link.download = `${table.titleNode.textContent}_${new Date().getTime()}.json`;
 		link.dispatchEvent(new MouseEvent('click', { 
 			bubbles: true, 
 			cancelable: true, 
 			view: window 
 		}));
+	}
+
+	pdfButton.onclick = () => {
+		const myWindow = window.open('', 'PRINT', 'height=650,width=900,top=100,left=150');
+		const [headElement] = document.getElementsByTagName('HEAD');
+
+		myWindow.document.write(`<html>${headElement.outerHTML}`);
+		myWindow.document.write('<body>');
+		myWindow.document.write(table.meetingNode.outerHTML);
+		myWindow.document.write('</body></html>');
+
+		// myWindow.document.close(); // necessary for IE >= 10
+		// myWindow.focus(); // necessary for IE >= 10*/
+
+		// TODO: solve no computed css after print
+
+		myWindow.print();
+		// myWindow.close();
 	}
 }
 
