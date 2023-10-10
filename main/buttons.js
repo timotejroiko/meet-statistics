@@ -31,9 +31,24 @@ function bindMainToolbarButtons() {
         const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
         const selected = Array.prototype.map.call(checked, x => x.closest(".participant"));
     }
-    expor.onclick = () => {
+    expor.onclick = async () => {
         const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
-        const selected = Array.prototype.map.call(checked, x => x.closest(".participant"));
+        const selected = /** @type {HTMLElement[]} */ (Array.prototype.map.call(checked, x => x.closest(".participant")));
+        const list = await Store.listMeetings();
+        const json = list.filter(x => selected.find(z => x.dataId === z.dataset.id));
+        for(const item of json) {
+            const participants = await Store.listMeetingParticipants(item.dataId);
+            const data = Store.getMultipleParticipantsEncodedData(item.dataId, participants.map(x => x.dataId));
+            for(const participant of participants) {
+                participant["data"] = data[`D-${item.dataId}-${participant.dataId}`];
+            }
+            item["participants"] = participants;
+        }
+        const blob = await (await new Response(new Blob([JSON.stringify(json)]).stream().pipeThrough(new CompressionStream("deflate")))).blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${json.length}-meetings-${new Date().toISOString()}.mscb`;
+        link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
     }
     delet.onclick = async () => {
         const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
