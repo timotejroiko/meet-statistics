@@ -29,7 +29,8 @@ function bindMainToolbarButtons() {
     const [merge, expor, delet] = /** @type {NodeListOf<HTMLElement>} */ (toolbar.querySelectorAll(".actions > div"));
     merge.onclick = () => {
         const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
-        const selected = Array.prototype.map.call(checked, x => x.closest(".participant"));
+        const selected = /** @type {HTMLElement[]} */ (Array.prototype.map.call(checked, x => x.closest(".participant")));
+        router(selected.map(x => x.dataset.id).join(","));
     }
     expor.onclick = async () => {
         const checked = /** @type {NodeListOf<HTMLElement>} */ (tableNode.querySelectorAll(".participant .checkbox input:checked"));
@@ -75,23 +76,10 @@ function bindMainToolbarButtons() {
 
 function bindMainTableButtons() {
     const tableNode = /** @type {HTMLElement} */ (document.querySelector("#main .content .container table"));
-    tableNode.onclick = async event => {
+    const tableHeader = /** @type {HTMLElement} */ (tableNode.querySelector(".head"));
+    tableHeader.onclick = event => {
         const target = /** @type {HTMLElement} */ (event.target);
-        if(target.closest(".participant")) {
-            if(target.closest(".checkbox")) {
-                if(target.tagName === "INPUT") {
-                    toggleActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
-                }
-            } else if(target.closest(".actions") && target.tagName === "SPAN") {
-                console.log("action")
-            } else {
-                const id = target.closest("tr")?.dataset.id;
-                if(id) {
-                    router(id);
-                    load();
-                }
-            }
-        } else if(target.closest("th")) {
+        if(target.closest("th")) {
             if(target.closest(".checkbox")) {
                 if(target.tagName === "INPUT") {
                     const view = tableNode.getElementsByClassName("participant");
@@ -104,6 +92,28 @@ function bindMainTableButtons() {
                 }
             } else {
                 console.log("header")
+            }
+        }
+    }
+}
+
+function bindMainTableContentButtons() {
+    const tableNode = /** @type {HTMLElement} */ (document.querySelector("#main .content .container table"));
+    const rows = /** @type {HTMLCollectionOf<HTMLElement>} */ (tableNode.getElementsByClassName("participant"));
+    for(const row of rows) {
+        row.onclick = async event => {
+            const target = /** @type {HTMLElement} */ (event.target);
+            if(target.closest(".checkbox")) {
+                if(target.tagName === "INPUT") {
+                    toggleActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
+                }
+            } else if(target.closest(".actions") && target.tagName === "SPAN") {
+                console.log("action")
+            } else if(!target.closest(".break")) {
+                const id = target.closest("tr")?.dataset.id;
+                if(id) {
+                    router(id);
+                }
             }
         }
     }

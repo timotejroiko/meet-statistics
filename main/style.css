@@ -178,43 +178,6 @@ body > div.show {
     overflow: hidden;
 }
 
-#main .container table .participant {
-    cursor: pointer;
-}
-
-#main .container table .participant:hover {
-    background: #eee;
-}
-
-#main .container table .participant.hide {
-    display: none;
-}
-
-#main .container table th {
-    padding: 0;
-    color: #777;
-    font-size: 0.8em;
-    cursor: pointer;
-    background: #f5f5f5;
-}
-
-#main .container table th:nth-child(n+3) {
-    width: 12%;
-}
-
-#main .container table th:nth-child(3) {
-    min-width: 80px;
-}
-
-#main .container table th:nth-child(6) {
-    min-width: 120px;
-}
-
-#main .container table td {
-    padding: 0;
-    border-top: 1px solid #ddd;
-}
-
 #main .container table .left {
     text-align: left;
 }
@@ -240,47 +203,89 @@ body > div.show {
     width: 15px;
 }
 
-#main .container table td p {
+#main .container table .head th {
+    padding: 0;
+    color: #777;
+    font-size: 0.8em;
+    cursor: pointer;
+    background: #f5f5f5;
+}
+
+#main .container table .head th:nth-child(n+3) {
+    width: 12%;
+}
+
+#main .container table .head th:nth-child(3) {
+    min-width: 80px;
+}
+
+#main .container table .head th:nth-child(6) {
+    min-width: 120px;
+}
+
+#main .container table .participant {
+    cursor: pointer;
+}
+
+#main .container table .participant .break {
+    cursor: text;
+    display: inline-block;
+}
+
+#main .container table .participant:hover {
+    background: #eee;
+}
+
+#main .container table .participant.hide {
+    display: none;
+}
+
+#main .container table .participant td {
+    padding: 0;
+    border-top: 1px solid #ddd;
+}
+
+#main .container table .participant td p {
     margin: 0;
 }
 
-#main .container table td p.id {
+#main .container table .participant td p.id {
     color: #777;
     font-size: 0.8em;
 }
 
-#main .container table td p.time {
+#main .container table .participant td p.time {
     color: #777;
     font-size: 0.8em;
 }
 
-#main .container table td.n p {
+#main .container table .participant td.n p {
     display: inline-block;
     vertical-align: top;
     margin-right: 5px;
 }
 
-#main .container table td.n span {
+#main .container table .participant td.n span {
     color: #777;
     margin-left: 5px;
 }
 
-#main .container table td.actions span {
+#main .container table .participant td.actions span {
     padding: 3px;
     margin: 0 3px;
     cursor: pointer;
 }
 
-#main .container table td.actions span:hover {
+#main .container table .participant td.actions span:hover {
     opacity: 0.5;
 }
 
-#main .container table td.actions span:not(.delete) {
+#main .container table .participant td.actions span:not(.delete) {
     transform: translate(0px, -3px);
     padding-bottom: 10px;
 }
 
-#main .container table td.actions span[data-content]::before {
+#main .container table .participant td.actions span[data-content]::before {
     content: attr(data-content);
     position: absolute;
     font-size: 0.4em;
@@ -291,6 +296,6 @@ body > div.show {
     bottom: 3px;
 }
 
-#main .container table td.actions span.delete {
+#main .container table .participant td.actions span.delete {
     color: red;
 }
