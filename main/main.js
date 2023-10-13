@@ -14,8 +14,8 @@ window.onpopstate = () => {
 async function loadMain(meetings) {
     const mainNode = /** @type {HTMLElement} */ (document.getElementById("main"));
     const tableNode = /** @type {HTMLElement} */ (mainNode.querySelector(".content .container table tbody"));
-    const head = /** @type {HTMLElement} */ (tableNode.querySelector(".head"));
-    tableNode.innerHTML = head.outerHTML;
+    const head = /** @type {HTMLElement} */ (tableNode.firstElementChild);
+    tableNode.replaceChildren(head);
     for(const meeting of meetings.reverse()) {
         const participants = await Store.listMeetingParticipants(meeting.dataId);
         const date = new Date(meeting.firstSeen);
