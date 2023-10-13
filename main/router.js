@@ -51,6 +51,8 @@ async function router(meeting = "", participant = "") {
         participantNode.classList.remove("show");
         mainNode.classList.add("show");
         loadMain(list);
+        toggleActionButtons(mainNode.querySelectorAll("table .participant .checkbox input:checked").length);
+
     }
 }
 
