@@ -212,11 +212,3 @@ html {
 	font-size: 16px;
 	border-radius: 50px;
 }
-
-/* PRINT */
-
-@media print {
-	.meeting .buttons {
-		display: none;
-	}
-}

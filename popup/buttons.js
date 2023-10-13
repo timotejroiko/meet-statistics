@@ -47,7 +47,7 @@ function bindDowloadButtons(table) {
 		}
 		const link = document.createElement('a');
 		link.href = `data:text/plain,${csv}`;
-		link.download = `${table.titleNode.textContent}_${new Date().getTime()}.csv`;
+		link.download = `${table.titleNode.textContent} - ${new Date().toISOString()}.csv`;
 		link.dispatchEvent(new MouseEvent('click', { 
 			bubbles: true, 
 			cancelable: true, 
@@ -66,7 +66,7 @@ function bindDowloadButtons(table) {
 		}
 		const link = document.createElement('a');
 		link.href = `data:text/plain,${JSON.stringify(meeting)}`;
-		link.download = `${table.titleNode.textContent}_${new Date().getTime()}.json`;
+		link.download = `${table.titleNode.textContent} - ${new Date().toISOString()}.json`;
 		link.dispatchEvent(new MouseEvent('click', { 
 			bubbles: true, 
 			cancelable: true, 
@@ -74,22 +74,25 @@ function bindDowloadButtons(table) {
 		}));
 	}
 
-	pdfButton.onclick = () => {
-		const myWindow = window.open('', 'PRINT', 'height=650,width=900,top=100,left=150');
-		const [headElement] = document.getElementsByTagName('HEAD');
+	pdfButton.onclick = async () => {
+		const styles = document.head.querySelectorAll("link[rel=stylesheet]");
+		const promises = /** @type {Promise<string>[]} */ (Array.prototype.map.call(styles, (/** @type {HTMLLinkElement} */ x) => fetch(x.href).then(r => r.text())));
+		const fetched = await Promise.all(promises);
 
-		myWindow.document.write(`<html>${headElement.outerHTML}`);
-		myWindow.document.write('<body>');
-		myWindow.document.write(table.meetingNode.outerHTML);
-		myWindow.document.write('</body></html>');
+		const printWindow = /** @type {Window} */ (window.open());
+		printWindow.document.head.innerHTML = fetched.map(x => `<style>${x}</style>`).join("") +
+		`<style>
+			body { width: ${window.outerWidth}px; margin: 0 auto; }
+			.meeting table { width: 90%; margin: 0 auto; }
+		</style>`;
 
-		// myWindow.document.close(); // necessary for IE >= 10
-		// myWindow.focus(); // necessary for IE >= 10*/
-
-		// TODO: solve no computed css after print
-
-		myWindow.print();
-		// myWindow.close();
+		printWindow.document.body.innerHTML = document.body.innerHTML;
+		printWindow.document.querySelector(".header")?.remove();
+		printWindow.document.querySelector(".buttons")?.remove();
+		printWindow.document.querySelector(".options")?.remove();
+		printWindow.document.title = `${table.titleNode.textContent} - ${new Date().toISOString()}`;
+		printWindow.print();
+		printWindow.close();
 	}
 }
 
