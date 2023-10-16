@@ -75,22 +75,28 @@ function bindDowloadButtons(table) {
 	}
 
 	pdfButton.onclick = async () => {
-		const styles = document.head.querySelectorAll("link[rel=stylesheet]");
+		const styles = /** @type {NodeListOf<HTMLLinkElement>} */ (document.head.querySelectorAll("link[rel=stylesheet]"));
 		const promises = /** @type {Promise<string>[]} */ (Array.prototype.map.call(styles, (/** @type {HTMLLinkElement} */ x) => fetch(x.href).then(r => r.text())));
-		const fetched = await Promise.all(promises);
-
-		const printWindow = /** @type {Window} */ (window.open());
-		printWindow.document.head.innerHTML = fetched.map(x => `<style>${x}</style>`).join("") +
+		const head = /** @type {HTMLElement} */ (document.head.cloneNode(true));
+		head.querySelector("title")?.remove();
+		head.querySelectorAll("link").forEach(x => x.remove());
+		head.innerHTML = head.innerHTML +
+		(await Promise.all(promises)).map(x => `<style>${x}</style>`).join("") + 
 		`<style>
 			body { width: ${window.outerWidth}px; margin: 0 auto; }
 			.meeting table { width: 90%; margin: 0 auto; }
-		</style>`;
+		</style>` +
+		`<title>${table.titleNode.textContent} - ${new Date().toISOString()}</title>`;
 
-		printWindow.document.body.innerHTML = document.body.innerHTML;
-		printWindow.document.querySelector(".header")?.remove();
-		printWindow.document.querySelector(".buttons")?.remove();
-		printWindow.document.querySelector(".options")?.remove();
-		printWindow.document.title = `${table.titleNode.textContent} - ${new Date().toISOString()}`;
+		const body = /** @type {HTMLElement} */ (document.body.cloneNode(true));
+		body.querySelector(".header")?.remove();
+		body.querySelector(".buttons")?.remove();
+		body.querySelector(".options")?.remove();
+		body.querySelectorAll("script")?.forEach(x => x.remove());
+
+		const printWindow = /** @type {Window} */ (window.open());
+		printWindow.document.write(`<html><head>${head}</head><body>${body.innerHTML}</body></html>`);
+		printWindow.document.close();
 		printWindow.print();
 		printWindow.close();
 	}

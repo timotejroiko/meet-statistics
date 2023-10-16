@@ -51,7 +51,7 @@ async function getCurrentMeeting() {
 		active: true,
 		currentWindow: true
 	});
-	const id = tab?.url.split("meet.google.com/")[1];
+	const id = tab?.url?.split("meet.google.com/")[1];
 	if(id) {
 		const list = await Store.listMeetings();
 		return list.find(x => x.id === id && x.lastSeen + 3600000 > Date.now());
