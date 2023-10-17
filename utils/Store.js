@@ -21,6 +21,7 @@ chrome.storage.local = AsyncMap<{
  * 		dataId: string,
  * 		firstSeen: number,
  * 		lastSeen: number,
+ * 		n: number,
  * 		self: string
  * }} MeetingData
  */
@@ -117,18 +118,12 @@ class Store {
 
 	/**
 	 * @param {string} id 
-	 * @param {boolean} update
 	 */
-	static async findOrCreateMeeting(id, update = false) {
+	static async findOrCreateMeeting(id) {
 		const now = Date.now();
 		const list = await Store.listMeetings();
 		const existing = list.find(x => x.id === id && x.lastSeen + 3600000 > now);
 		if(existing) {
-			if(update) {
-				existing.lastSeen = now;
-				// @ts-ignore
-				await chrome.storage.local.set({ list });
-			}
 			return existing;
 		}
 		const obj = {
@@ -137,13 +132,12 @@ class Store {
 			dataId: Store.hash(`${id}-${now.toString(36)}`),
 			firstSeen: now,
 			lastSeen: now,
+			n: 0,
 			self: ""
 		};
-		if(update) {
-			list.push(obj);
-			// @ts-ignore
-			await chrome.storage.local.set({ list });
-		}
+		list.push(obj);
+		// @ts-ignore
+		await chrome.storage.local.set({ list });
 		return obj;
 	}
 

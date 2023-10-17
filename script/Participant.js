@@ -69,7 +69,7 @@ class Participant {
 	encodeEvent(type, time, action = "") {
 		let temp = time - this.meeting.info.firstSeen;
 		const base256 = String.fromCharCode(temp >> 24, (temp >> 16) & 255, (temp >> 8) & 255, temp & 255);
-		return `${Store.eventTypes[type]}${base256}${action}`;
+		return `${this.meeting.store.eventTypes[type]}${base256}${action}`;
 	}
 	
 	/**

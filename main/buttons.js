@@ -91,13 +91,19 @@ function bindMainTableButtons() {
                     toggleActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
                 }
             } else {
-                console.log("header")
+                const rows = [...tableNode.getElementsByClassName("participant")];
+                rows.sort((a, b) => {
+                    return -1;
+                });
             }
         }
     }
 }
 
-function bindMainTableContentButtons() {
+/**
+ * @param {Awaited<ReturnType<Store.listMeetings>>} meetings 
+ */
+function bindMainTableContentButtons(meetings) {
     const tableNode = /** @type {HTMLElement} */ (document.querySelector("#main .content .container table"));
     const rows = /** @type {HTMLCollectionOf<HTMLElement>} */ (tableNode.getElementsByClassName("participant"));
     for(const row of rows) {
@@ -108,7 +114,58 @@ function bindMainTableContentButtons() {
                     toggleActionButtons(tableNode.querySelectorAll(".participant .checkbox input:checked").length);
                 }
             } else if(target.closest(".actions") && target.tagName === "SPAN") {
-                console.log("action")
+                const row = /** @type {HTMLElement} */ (target.closest(".participant"));
+                const id = /** @type {string} */ (row.dataset.id);
+                const meeting = meetings.find(x => x.dataId === id);
+                if(meeting) {
+                    if(target.dataset.content === "CSV") {
+                        let csv = "Participant,Attendance time,Camera time,Mic time,Time speaking,Time presenting,Hands raised,Emojis sent,Messages sent";
+                        const participants = await Store.listMeetingParticipants(id);
+                        const participantsData = await Store.getMultipleParticipantsData(id, participants.map(x => x.dataId));
+                        for(const participant of participants) {
+                            const data = participantsData[participant.dataId];
+                            const parsed = Utils.parseData(participant, data);
+                            csv += "\n" + participant.name;
+                            for(const key of ["time", "cam", "mic", "voice", "presentation"]) {
+                                csv += "," + Utils.milliToHHMMSS(parsed[key]);
+                            }
+                            for(const key of ["hands", "emojis", "texts"]) {
+                                csv += "," + parsed[key].toString();
+                            }
+                        }
+                        const link = document.createElement('a');
+                        link.href = `data:text/plain,${csv}`;
+                        link.download = `${meeting.title} - ${new Date(meeting.firstSeen).toISOString()}.csv`;
+                        link.dispatchEvent(new MouseEvent('click', { 
+                            bubbles: true, 
+                            cancelable: true, 
+                            view: window 
+                        }));
+                    } else if(target.dataset.content === "JSON") {
+                        const participants = await Store.listMeetingParticipants(id);
+                        const participantsData = await Store.getMultipleParticipantsData(id, participants.map(x => x.dataId));
+                        meeting["participants"] = participants;
+                        for(const participant of participants) {
+                            const data = participantsData[participant.dataId];
+                            participant["data"] = Utils.parseData(participant, data);
+                            participant["events"] = data;
+                        }
+                        const link = document.createElement('a');
+                        link.href = `data:text/plain,${JSON.stringify(meeting)}`;
+                        link.download = `${meeting.title} - ${new Date(meeting.firstSeen).toISOString()}.json`;
+                        link.dispatchEvent(new MouseEvent('click', { 
+                            bubbles: true, 
+                            cancelable: true, 
+                            view: window 
+                        }));
+                    } else if(target.title === "Delete") {
+                        const ok = confirm(`Permanently delete ${meeting.title}?`);
+                        if(ok) {
+                            meetings.splice(meetings.indexOf(meeting), 1);
+                            Store.setRaw({ list: meetings });
+                        };
+                    }
+                }
             } else if(!target.closest(".break")) {
                 const id = target.closest("tr")?.dataset.id;
                 if(id) {

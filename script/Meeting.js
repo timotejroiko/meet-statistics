@@ -137,19 +137,6 @@ class Meeting {
 	async syncData() {
 		const now = Date.now();
 
-		const list = await this.store.listMeetings();
-		const meeting = list.find(x => x.dataId === this.info.dataId);
-		if(meeting) {
-			meeting.lastSeen = now;
-			meeting.title = (document.title?.length || 0) > (meeting.title?.length || 0) ? document.title : meeting.title;
-			if(this._self && this._self_participant) {
-				const participant = this._self_participant;
-				meeting.self = this.store.hash(`${participant.name}-${participant.avatar}`);
-			}
-			// @ts-ignore
-			await Store.setRaw({ list }).catch(console.error);
-		}
-
 		const existing = await this.store.listMeetingParticipants(this.info.dataId);
 		const dataUpdates = [];
 		for(const participant of this.participants.values()) {
@@ -228,13 +215,27 @@ class Meeting {
 				if(!data) {
 					data = list[fullId] = [];
 				}
-				if(data.length && data[data.length - 1]?.[0] === Store.eventTypes.leave && participant.events[0]?.[0] !== Store.eventTypes.join) {
+				if(data.length && data[data.length - 1]?.[0] === this.store.eventTypes.leave && participant.events[0]?.[0] !== this.store.eventTypes.join) {
 					participant.events.unshift(participant.encodeEvent("join", participant.created, this.store.hash(participant.id)));
 				}
 				data.push(...participant.events);
 				participant.events.length = 0;
 			}
 			await this.store.setRaw(list);
+		}
+
+		const list = await this.store.listMeetings();
+		const meeting = list.find(x => x.dataId === this.info.dataId);
+		if(meeting) {
+			meeting.lastSeen = now;
+			meeting.n = existing.length;
+			meeting.title = (document.title?.length || 0) > (meeting.title?.length || 0) ? document.title : meeting.title;
+			if(this._self && this._self_participant) {
+				const participant = this._self_participant;
+				meeting.self = this.store.hash(`${participant.name}-${participant.avatar}`);
+			}
+			// @ts-ignore
+			await this.store.setRaw({ list });
 		}
 
 		await this.store.updateMeetingParticipants(this.info.dataId, existing);

@@ -47,7 +47,7 @@ function bindDowloadButtons(table) {
 		}
 		const link = document.createElement('a');
 		link.href = `data:text/plain,${csv}`;
-		link.download = `${table.titleNode.textContent} - ${new Date().toISOString()}.csv`;
+		link.download = `${table.titleNode.textContent} - ${new Date(table.meeting.firstSeen).toISOString()}.csv`;
 		link.dispatchEvent(new MouseEvent('click', { 
 			bubbles: true, 
 			cancelable: true, 
@@ -61,12 +61,12 @@ function bindDowloadButtons(table) {
 		const participantsData = await Store.getMultipleParticipantsData(table.meeting.dataId, participants.map(x => x.dataId));
 		meeting["participants"] = participants;
 		for(const participant of participants) {
-			participant["data"] = Object.entries(table.get(participant.dataId).state).reduce((a, t) => { a[t[0]] = t[1].ren; return a }, {});
+			participant["data"] = table.get(participant.dataId).parsedState;
 			participant["events"] = participantsData[participant.dataId];
 		}
 		const link = document.createElement('a');
 		link.href = `data:text/plain,${JSON.stringify(meeting)}`;
-		link.download = `${table.titleNode.textContent} - ${new Date().toISOString()}.json`;
+		link.download = `${table.titleNode.textContent} - ${new Date(meeting.firstSeen).toISOString()}.json`;
 		link.dispatchEvent(new MouseEvent('click', { 
 			bubbles: true, 
 			cancelable: true, 
@@ -86,7 +86,7 @@ function bindDowloadButtons(table) {
 			body { width: ${window.outerWidth}px; margin: 0 auto; }
 			.meeting table { width: 90%; margin: 0 auto; }
 		</style>` +
-		`<title>${table.titleNode.textContent} - ${new Date().toISOString()}</title>`;
+		`<title>${table.titleNode.textContent} - ${new Date(table.meeting.firstSeen).toISOString()}</title>`;
 
 		const body = /** @type {HTMLElement} */ (document.body.cloneNode(true));
 		body.querySelector(".header")?.remove();
