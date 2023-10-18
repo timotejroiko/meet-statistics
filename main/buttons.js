@@ -162,7 +162,8 @@ function bindMainTableContentButtons(meetings) {
                         const ok = confirm(`Permanently delete ${meeting.title}?`);
                         if(ok) {
                             meetings.splice(meetings.indexOf(meeting), 1);
-                            Store.setRaw({ list: meetings });
+                            row.remove();
+                            await Store.setRaw({ list: meetings });
                         };
                     }
                 }
