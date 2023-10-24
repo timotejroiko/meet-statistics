@@ -41,5 +41,6 @@
 		"email": "timotejroiko@yahoo.com.br"
 	},
 	"homepage_url": "https://github.com/timotejroiko/meet-statistics",
-	"minimum_chrome_version": "85"
+	"minimum_chrome_version": "88",
+	"key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Dif3a0mt3Jtu/E2rU71svgpdWfdVINNrr2uCz7kqjPyCuKrjS52onefRpjuVxSLqFEDPifUMNpEEc+ZKqHByQnBvHl4zgnjpHFbeIKtIxR0YgH4rdUu0I1qymMDO6+a5iIU7STcgJxEj0g+gM/8U/pwebUIF0D4/H3emkiMJ6y3NJJCKE71Ughe2bxCAL4loJEWJt7ImaTYEq8qb49cGHKnqWzlehJKUd95J7Y52bwFw4fooq+vUBAfqcuTq1g/HAJoFGq4puH3caKuUvyISbDzHy9wdHAbvA2fnTgGtaDFITcuqtgfCFwKoKilp+unFuSvdZXXvBgAgiK6RHcZsQIDAQAB"
 }
