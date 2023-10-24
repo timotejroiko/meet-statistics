@@ -1,5 +1,119 @@
 function bindMainSidebarButtons() {
-    
+    const mainNode = /** @type {HTMLElement} */ (document.getElementById("main"));
+    const menuItems = /** @type {NodeListOf<HTMLElement>} */ (mainNode.querySelectorAll(".sidebar .menu div"));
+
+    const settings = menuItems[0];
+    settings.onclick = () => {
+        const contentNode = /** @type {HTMLElement} */ (mainNode.querySelector(".content"));
+        contentNode.classList.toggle("opts");
+    };
+    Store.getOptions().then(options => {
+        const optionsView = /** @type {HTMLCollectionOf<HTMLElement>} */ (mainNode.getElementsByClassName("option"));
+		for(const optionNode of optionsView) {
+			const key = optionNode.dataset.option;
+			const button = /** @type {HTMLElement} */ (optionNode.children[1]);
+			button.textContent = options[key] ? "toggle_on" : "toggle_off";
+			optionNode.dataset.enabled = Boolean(options[key]).toString();
+			button.onclick = () => {
+				const oldstate = optionNode.dataset.enabled;
+				optionNode.dataset.enabled = oldstate === "true" ? "false" : "true";
+				button.textContent = oldstate === "false" ? "toggle_on" : "toggle_off";
+				if((oldstate === "false" && !options[key]) || (oldstate === "true" && options[key])) {
+					options[key] = !options[key];
+					Store.setOptions(options).catch(console.error);
+				}
+			}
+		}
+	});
+
+    const imprt = menuItems[1];
+    imprt.onclick = () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.multiple = true;
+        input.accept = ".mscb";
+        input.onchange = async e => {
+            const target = /** @type {typeof input} */ (e.target);
+            const files = /** @type {FileList} */ (target.files);
+            const oldlist = await Store.listMeetings();
+            const newlist = [];
+            const data = {};
+            for(const file of files) {
+                const string = await new Response(file.stream().pipeThrough(new DecompressionStream("deflate"))).text();
+                const list = JSON.parse(string);
+                newlist.push(...list);
+            }
+            const toreplace = [];
+            for(const meeting of newlist) {
+                const oldmeeting = oldlist.find(x => x.dataId === meeting.dataId);
+                if(oldmeeting) {
+                    toreplace.push({ meeting, oldmeeting });
+                } else {
+                    for(const participant of meeting.participants) {
+                        data[`D-${meeting.dataId}-${participant.dataId}`] = participant.data;
+                        delete participant.data;
+                    }
+                    data[`P-${meeting.dataId}`] = meeting.participants;
+                    delete meeting.participants;
+                    oldlist.push(meeting);
+                }
+            }
+            if(toreplace.length) {
+                const ok = confirm(`${toreplace.length} meetings already exist, overwrite them?`);
+                if(ok) {
+                    for(const { meeting, oldmeeting } of toreplace) {
+                        const oldmeetingparticipants = await Store.listMeetingParticipants(oldmeeting.dataId);
+                        // @ts-ignore
+                        chrome.storage.local.remove(oldmeetingparticipants.map(x => `D-${oldmeeting.dataId}-${x.dataId}`));
+                        for(const participant of meeting.participants) {
+                            data[`D-${meeting.dataId}-${participant.dataId}`] = participant.data;
+                            delete participant.data;
+                        }
+                        data[`P-${meeting.dataId}`] = meeting.participants;
+                        delete meeting.participants;
+                        oldlist.splice(oldlist.indexOf(oldmeeting), 1);
+                        oldlist.push(meeting);   
+                    }
+                }
+            }
+            data.list = oldlist;
+            Store.setRaw(data);
+            router();
+        };
+        input.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    }
+
+    const exprt = menuItems[2];
+    exprt.onclick = async () => {
+        const list = await Store.listMeetings();
+        for(const item of list) {
+            const participants = await Store.listMeetingParticipants(item.dataId);
+            const data = Store.getMultipleParticipantsEncodedData(item.dataId, participants.map(x => x.dataId));
+            for(const participant of participants) {
+                participant["data"] = data[`D-${item.dataId}-${participant.dataId}`];
+            }
+            item["participants"] = participants;
+        }
+        const blob = await (await new Response(new Blob([JSON.stringify(list)]).stream().pipeThrough(new CompressionStream("deflate")))).blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${list.length}-meetings-${new Date().toISOString()}.mscb`;
+        link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+    }
+
+    const delet = menuItems[3];
+    delet.onclick = () => {
+        const ok = confirm("Permanently delete all meetings?");
+        if(ok) {
+            const reallyok = confirm("Are you sure?");
+            if(reallyok) {
+                // @ts-ignore
+                chrome.storage.local.clear();
+                updateSidebarStats(0);
+                router();
+            }
+        }
+    }
 }
 
 function bindMainToolbarButtons() {

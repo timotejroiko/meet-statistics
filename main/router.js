@@ -26,7 +26,12 @@ async function router(meeting = "", participant = "") {
         const selected = list.filter(x => split.includes(x.dataId));
         if(selected.length) {
             if(selected.length > 1) {
-
+                // TODO
+                document.title = `${1}`;
+                mainNode.classList.remove("show");
+                participantNode.classList.remove("show");
+                meetingNode.classList.add("show");
+                // loadMeeting(m, participants);
             } else {
                 const m = selected[0];
                 const participants = await Store.listMeetingParticipants(m.dataId);
@@ -52,7 +57,6 @@ async function router(meeting = "", participant = "") {
         mainNode.classList.add("show");
         loadMain(list);
         toggleActionButtons(mainNode.querySelectorAll("table .participant .checkbox input:checked").length);
-
     }
 }
 

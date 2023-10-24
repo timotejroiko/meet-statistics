@@ -1,9 +1,19 @@
+/* ROUTING */
+
 body > div {
     display: none;
 }
 
 body > div.show {
     display: flex;
+}
+
+#main .content.opts .container, #main .content .options {
+    display: none;
+}
+
+#main .content .container, #main .content.opts .options {
+    display: block;
 }
 
 /* MAIN PAGE */
@@ -103,24 +113,24 @@ body > div.show {
     padding: 0 3%;
 }
 
-#main .content h2 {
+#main .container h2 {
     margin: 60px 20px 20px 20px;
     font-size: 1.6em;
 }
 
-#main .content .toolbar {
+#main .container .toolbar {
     display: flex;
     justify-content: space-between;
     padding: 20px;
 }
 
-#main .content .toolbar .search {
+#main .container .toolbar .search {
     display: flex;
     align-items: center;
     flex-grow: 1;
 }
 
-#main .content .toolbar .search input {
+#main .container .toolbar .search input {
     padding: 0 10px 0 40px;
     font-size: 1.25em;
     width: 100%;
@@ -129,22 +139,22 @@ body > div.show {
     height: 100%;
 }
 
-#main .content .toolbar .search span {
+#main .container .toolbar .search span {
     position: absolute;
     margin-left: 10px;
     color: #777;
 }
 
-#main .content .toolbar .actions {
+#main .container .toolbar .actions {
     display: flex;
 }
 
-#main .content .toolbar .actions > div.disabled {
+#main .container .toolbar .actions > div.disabled {
     opacity: 0.5;
     pointer-events: none;
 }
 
-#main .content .toolbar .actions > div {
+#main .container .toolbar .actions > div {
     display: flex;
     align-items: center;
     padding: 0px 20px;
@@ -158,11 +168,11 @@ body > div.show {
     justify-content: center;
 }
 
-#main .content .toolbar .actions > div.delete {
+#main .container .toolbar .actions > div.delete {
     background: red;
 }
 
-#main .content .toolbar .actions p {
+#main .container .toolbar .actions p {
     text-wrap: nowrap;
     margin-right: 10px;
 }
@@ -298,4 +308,46 @@ body > div.show {
 
 #main .container table .participant td.actions span.delete {
     color: red;
+}
+
+/* OPTIONS */
+
+#main .content .options {
+	padding: 20px 40px;
+	box-sizing: border-box;
+}
+
+#main .content .options .option {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+#main .content .options .option p {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: bold;
+}
+
+#main .content .options .option span {
+	font-size: 40px;
+	line-height: 30px;
+	color: gray;
+	cursor: pointer;
+}
+
+#main .content .options .option[data-enabled="true"] span {
+	color: limegreen;
+}
+
+#main .content .options .ok {
+	padding: 10px;
+	cursor: pointer;
+	text-align: center;
+	margin: 30px 50px 20px 50px;
+	background: green;
+	color: white;
+	font-weight: bold;
+	font-size: 16px;
+	border-radius: 50px;
 }
