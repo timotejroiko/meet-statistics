@@ -91,6 +91,7 @@ html {
 	border-radius: 5px;
 	overflow: hidden;
 	border: 1px solid #aaa;
+	min-width: 500px;
 }
 
 .meeting table tr {

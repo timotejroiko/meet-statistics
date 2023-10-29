@@ -1,18 +1,20 @@
 class Table {
     /**
-     * @param {NonNullable<Awaited<ReturnType<getCurrentMeeting>>>} meeting 
+     * @param {NonNullable<Popup["meeting"]>} meeting 
+     * @param {Popup} popup 
      */
-    constructor(meeting) {
+    constructor(meeting, popup) {
         this.meeting = meeting;
+        this.popup = popup;
         /** @type {TableRow[]} */ this.data = [];
         /** @type {Record<string, TableRow>} */ this.keys = {};
-        this.tableNode = /** @type {HTMLElement} */ (document.querySelector(".meeting table tbody"));
-        this.tableView = /** @type {HTMLCollectionOf<HTMLElement>} */ (document.getElementsByClassName("participant"));
-        this.tableIcons = /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll("table th"));
-        this.meetingNode = /** @type {HTMLElement} */ (document.querySelector(".meeting"));
-		this.titleNode = /** @type {HTMLElement} */ (document.querySelector(".meeting .title"));
-        this.timeNode = /** @type {HTMLElement} */ (document.querySelector(".meeting .time"));
-        this.pageButton = /** @type {HTMLAnchorElement} */ (document.querySelector(".buttons .page")?.parentElement);
+        this.meetingNode = /** @type {HTMLElement} */ (this.popup.containerNode.querySelector(".meeting"));
+        this.tableNode = /** @type {HTMLElement} */ (this.meetingNode.querySelector("table tbody"));
+        this.tableIcons = /** @type {NodeListOf<HTMLElement>} */ (this.meetingNode.querySelectorAll("table th"));
+        this.tableView = /** @type {HTMLCollectionOf<HTMLElement>} */ (this.tableNode.getElementsByClassName("participant"));
+		this.titleNode = /** @type {HTMLElement} */ (this.meetingNode.querySelector(".title"));
+        this.timeNode = /** @type {HTMLElement} */ (this.meetingNode.querySelector(".time"));
+        this.pageButton = /** @type {HTMLAnchorElement} */ (this.meetingNode.querySelector(".buttons .page")?.parentElement);
 		this.meetingNode.dataset.id = meeting.id;
 		this.titleNode.textContent = meeting.title;
 		this.timeNode.textContent = Utils.milliToHHMMSS(meeting.lastSeen - meeting.firstSeen);
@@ -20,8 +22,8 @@ class Table {
     }
 
     async load() {
-        const participants = await Store.listMeetingParticipants(this.meeting.dataId);
-        const participantsData = await Store.getMultipleParticipantsData(this.meeting.dataId, participants.map(x => x.dataId));
+        const participants = await this.popup.store.listMeetingParticipants(this.meeting.dataId);
+        const participantsData = await this.popup.store.getMultipleParticipantsData(this.meeting.dataId, participants.map(x => x.dataId));
         for(const participant of participants) {
             const row = this.getOrCreateRow(participant);
             row.update(participant);
@@ -50,7 +52,7 @@ class Table {
     getOrCreateRow(participant) {
         let data = this.keys[participant.dataId];
         if(!data) {
-            const d = new TableRow(participant);
+            const d = new TableRow(participant, this);
             this.data.push(d);
             data = this.keys[participant.dataId] = d;
         }

@@ -1,8 +1,10 @@
 class TableRow {
     /**
      * @param {Awaited<ReturnType<Store.listMeetingParticipants>>[0]} participant 
+     * @param {Table} table 
      */
-    constructor(participant) {
+    constructor(participant, table) {
+        this.table = table;
         this.node = document.createElement("tr");
         this.node.classList.add("participant");
         this.node.innerHTML = `<td><img src="${participant.avatar + "=s32"}"><p>${participant.name}</p></td><td>0:00</td><td>0:00</td><td>0:00</td><td>0:00</td><td>0:00</td><td>0</td><td>0</td><td>0</td>`;
