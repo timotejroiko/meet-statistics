@@ -43,7 +43,10 @@ class TableRow {
     }
 
     get parsedState() {
-        return Object.entries(this.state).reduce((a, t) => (a[t[0]] = t[1].ren) && a, {});
+        return Object.entries(this.state).reduce((a, t) => {
+            a[t[0]] = t[1].ren;
+            return a;
+        }, {});
     }
 
     get timeNode() {

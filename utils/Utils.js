@@ -93,6 +93,11 @@ class Utils {
             }
         }
 
-		return Object.entries(state).reduce((a, t) => (a[t[0]] = t[1].ren) && a, {});
+        console.log(state)
+
+		return Object.entries(state).reduce((a, t) => {
+            a[t[0]] = t[1].ren;
+            return a;
+        }, {});
 	}
 }
