@@ -29,7 +29,7 @@ chrome.storage.local = AsyncMap<{
 /**
  * @typedef {{
  * 		name: string,
- * 		subname: string,
+ * 		subname: string[],
  * 		avatar: string,
  * 		firstSeen: number,
  * 		lastSeen: number,

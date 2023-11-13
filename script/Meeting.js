@@ -174,18 +174,16 @@ class Meeting {
 				const hash = this.store.hash(`${participant.name}-${participant.avatar}`);
 				const old = existing.find(x => x.dataId === hash);
 				if(old) {
-					if(participant.subname && !old.subname) {
-						old.subname = participant.subname;
-					}
+					old.subname = [...new Set([...old.subname, ...participant.subname])];
 					old.lastSeen = now - this.info.firstSeen;
 					if(participant.status === "gridevent" || participant.status === "tabevent") {
 						participant.events.unshift(participant.encodeEvent("join", participant.created, this.store.hash(participant.id)));
 					}
 				} else {
 					existing.push({
-						name: participant.name || "",
-						avatar: participant.avatar || "",
-						subname: participant.subname || "",
+						name: participant.name,
+						avatar: participant.avatar,
+						subname: participant.subname,
 						firstSeen: now - this.info.firstSeen,
 						lastSeen: now - this.info.firstSeen,
 						dataId: hash

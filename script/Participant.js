@@ -5,9 +5,9 @@ class Participant {
 	 */
 	constructor(id, meeting) {
 		this.id = id;
-		this.name = null;
-		this.avatar = null;
-		this.subname = null;
+		this.name = "";
+		this.avatar = "";
+		this.subname = [];
 		this.self = false;
 
 		this.status = null;
@@ -248,7 +248,16 @@ class Participant {
 			console.error(new MeetStatisticsError("tab avatar not found"));
 		}
 
-		this.subname ||= node.querySelector("img")?.parentElement?.nextElementSibling?.lastElementChild?.textContent;
+		const subname = node.querySelector("img")?.parentElement?.nextElementSibling?.lastElementChild;
+		if(subname) {
+			const array = /** @type {HTMLElement} */ (subname).innerText.split("\n");
+			if(this.subname?.length) {
+				array.push(...this.subname);
+			}
+			this.subname = [...new Set(array)];
+		} else {
+			console.error(new MeetStatisticsError("tab subname not found"));
+		}
 
 		const selfmic = node.querySelector("div[data-use-tooltip]");
 		if(selfmic) {
