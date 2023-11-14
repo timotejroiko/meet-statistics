@@ -1,3 +1,5 @@
+"use strict";
+
 class Participant {
 	/**
 	 * @param {string} id 
@@ -19,7 +21,7 @@ class Participant {
 		this._main_node = null;
 		this._main_observer = null;
 		this._tab_node = null;
-		
+
 		this._mic_node = null;
 		this._mic_observer = null;
 		this._voice_node = null;
@@ -71,7 +73,7 @@ class Participant {
 		const base256 = String.fromCharCode(temp >> 24, (temp >> 16) & 255, (temp >> 8) & 255, temp & 255);
 		return `${this.meeting.store.eventTypes[type]}${base256}${action}`;
 	}
-	
+
 	/**
 	 * @param {Element} node 
 	 */
@@ -112,7 +114,7 @@ class Participant {
 		if(!this._tab_node && !node.querySelector('button[disabled]') && !this.self) {
 			this.self = true;
 		}
-		
+
 		this._mic_node = node.firstElementChild?.lastElementChild?.lastElementChild?.firstElementChild;
 		if(this._mic_node) {
 			this._mic_observer = new MutationObserver(this._onMicMutation.bind(this));
@@ -130,8 +132,7 @@ class Participant {
 		} else {
 			console.error(new MeetStatisticsError("mic_node not found"));
 		}
-		
-		
+
 		this._voice_node = this._mic_node?.querySelector("div[jscontroller][class][jsname][jsaction]");
 		if(this._voice_node) {
 			this._voice_observer = new MutationObserver(this._onVoiceMutation.bind(this));
@@ -142,7 +143,7 @@ class Participant {
 		} else {
 			console.error(new MeetStatisticsError("voice_node not found"));
 		}
-		
+
 		this._cam_node = node.querySelector("div[data-resolution-cap]");
 		if(this._cam_node) {
 			this._cam_observer = new MutationObserver(this._onCamMutation.bind(this));
@@ -160,7 +161,7 @@ class Participant {
 		} else {
 			console.error(new MeetStatisticsError("cam_node not found"));
 		}
-		
+
 		this._hand_node = node.querySelector("div[data-self-name]")?.parentElement;
 		if(this._hand_node) {
 			this._hand_observer = new MutationObserver(this._onHandMutation.bind(this));
@@ -170,7 +171,6 @@ class Participant {
 		} else {
 			console.error(new MeetStatisticsError("hand_node not found"));
 		}
-		
 
 		this._emoji_node = node.firstElementChild?.lastElementChild?.firstElementChild?.firstElementChild;
 		if(this._emoji_node) {
@@ -182,25 +182,25 @@ class Participant {
 		} else {
 			console.error(new MeetStatisticsError("emoji_node not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log(`participant ${this.name} main attached`);
 		}
 	}
-	
+
 	detachMain() {
 		this._mic_observer?.disconnect();
 		this._mic_observer = null;
 		this._mic_node = null;
-		
+
 		this._voice_observer?.disconnect();
 		this._voice_observer = null;
 		this._voice_node = null;
-		
+
 		this._cam_observer?.disconnect();
 		this._cam_observer = null;
 		this._cam_node = null;
-		
+
 		this._hand_observer?.disconnect();
 		this._hand_observer = null;
 		this._hand_node = null;
@@ -224,7 +224,7 @@ class Participant {
 			console.log(`participant ${this.name} main detached`);
 		}
 	}
-	
+
 	/**
 	 * @param {Element} node 
 	 */
@@ -311,21 +311,21 @@ class Participant {
 				console.error(new MeetStatisticsError("tab_mic_node not found"));
 			}
 		}
-		
+
 		if(this._debug) {
 			console.log(`participant ${this.name} tab attached`);
 		}
 	}
-	
+
 	detachTab() {
 		this._tab_mic_observer?.disconnect();
 		this._tab_mic_observer = null;
 		this._tab_mic_node= null;
-		
+
 		this._tab_voice_observer?.disconnect();
 		this._tab_voice_observer = null;
 		this._tab_voice_node = null;
-		
+
 		this._tab_node = null;
 
 		if(this._voice_status > -1 && !this._main_node) {
@@ -366,7 +366,7 @@ class Participant {
 			console.log(`participant ${this.name} tab notself voice detached`);
 		}
 	}
-	
+
 	/**
 	 * @param {(MutationRecord & { target: Element })[]} event 
 	 */
@@ -386,7 +386,7 @@ class Participant {
 			this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
 		}
 	}
-	
+
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
@@ -409,7 +409,7 @@ class Participant {
 			}
 		}, this._voice_stop_timeout);
 	}
-	
+
 	/**
 	 * @param {(MutationRecord & { target: Element })[]} event 
 	 */
@@ -422,7 +422,7 @@ class Participant {
 			this.events.push(this.encodeEvent(this._cam_status ? "cam on" : "cam off", Date.now()));
 		}
 	}
-	
+
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
@@ -448,7 +448,7 @@ class Participant {
 			this.events.push(this.encodeEvent("emoji", Date.now(), ev.addedNodes[0].getAttribute("data-emoji") || "?"));
 		}
 	}
-	
+
 	/**
 	 * @param {(MutationRecord & { target: Element })[]} event 
 	 */
@@ -485,8 +485,8 @@ class Participant {
 		if(this.meeting.options.track_mic) {
 			this.events.push(this.encodeEvent(this._mic_status ? "mic on" : "mic off", Date.now()));
 		}
-	}	
-	
+	}
+
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
@@ -585,7 +585,7 @@ class Presentation {
 		} else {
 			console.error(new MeetStatisticsError("presentation avatar not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log(`presentation ${this.name} main attached`);
 		}
@@ -620,12 +620,12 @@ class Presentation {
 		} else {
 			console.error(new MeetStatisticsError("presentation tab avatar not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log(`presentation ${this.name} tab attached`);
 		}
 	}
-	
+
 	detachTab() {
 		this._tab_node = null;
 

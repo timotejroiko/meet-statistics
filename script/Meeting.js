@@ -1,3 +1,5 @@
+"use strict";
+
 class MeetStatisticsError extends Error {
 	constructor(...args) {
 		super(...args);
@@ -7,7 +9,7 @@ class MeetStatisticsError extends Error {
 
 class Meeting {
 	/**
-	 * @param {Awaited<ReturnType<typeof Store.findOrCreateMeeting>>} info
+	 * @param {Awaited<ReturnType<typeof Store.findOrCreateMeeting>>} info 
 	 * @param {typeof Store.defaultOptions} options 
 	 * @param {typeof Store} store 
 	 */
@@ -16,14 +18,14 @@ class Meeting {
 		this.info = info;
 		this.options = options;
 		this.store = store;
-		
+
 		this._grid_node = null;
 		this._grid_observer = null;
 		this._grid_reactions_node = null;
 		this._grid_reactions_observer = null;
 		this._grid_messages_node = null;
 		this._grid_messages_observer = null;
-		
+
 		this._tab1_node = null;
 		this._tab1_hands_container_node = null;
 		this._tab1_hands_container_observer = null;
@@ -35,18 +37,18 @@ class Meeting {
 		this._tab1_contributors_list_observer = null;
 		this._tab1_contributors_node = null;
 		this._tab1_contributors_observer = null;
-		
+
 		this._tab2_node = null;
 		this._tab2_chat_node = null;
 		this._tab2_chat_observer = null;
-		
+
 		this._interval = -1;
 		this._grid_timer = -1;
 		this._grid_delay = 5000;
 		this._self_name = null;
 		this._self_participant = null;
 	}
-	
+
 	get active() {
 		return this._interval > -1;
 	}
@@ -79,7 +81,7 @@ class Meeting {
 		}
 		return this._self_name;
 	}
-	
+
 	start() {
 		this._interval = setInterval(() => {
 			const grid = document.querySelector("div[data-participant-id]:not([role])");
@@ -114,7 +116,7 @@ class Meeting {
 			console.log("monitoring started");
 		}
 	}
-	
+
 	stop() {
 		clearInterval(this._interval);
 		this._interval = -1;
@@ -238,7 +240,7 @@ class Meeting {
 
 		await this.store.updateMeetingParticipants(this.info.dataId, existing);
 	}
-	
+
 	_attachMain() {
 		this._grid_node = document.querySelector("div[data-participant-id]:not([role])")?.parentElement?.parentElement;
 		if(this._grid_node) {
@@ -269,7 +271,7 @@ class Meeting {
 		} else {
 			console.error(new MeetStatisticsError("messages_node not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log("grid attached");
 		}
@@ -294,14 +296,14 @@ class Meeting {
 					}
 				}
 			}
-	
+
 			if(this._grid_node.lastElementChild?.previousElementSibling?.firstElementChild) {
 				const selfmic = this._grid_node.lastElementChild?.previousElementSibling?.firstElementChild.querySelector("div[data-use-tooltip]")?.parentElement
 				// TODO attach miniself
 			}
 		}
 	}
-	
+
 	_detachMain() {
 		this._grid_reactions_observer?.disconnect();
 		this._grid_reactions_observer = null;
@@ -314,12 +316,12 @@ class Meeting {
 		this._grid_node = null;
 
 		this.participants.forEach(participant => participant.detachMain());
-		
+
 		if(this._debug) {
 			console.log("grid detached");
 		}
 	}
-	
+
 	_attachTab1() {
 		this._tab1_node = document.querySelector("div[data-tab-id='1']");
 		if(this._tab1_node) {
@@ -332,7 +334,7 @@ class Meeting {
 			} else {
 				console.error(new MeetStatisticsError("tab1_hands_node not found"));
 			}
-	
+
 			this._tab1_contributors_list_node = this._tab1_hands_container_node?.nextElementSibling?.firstElementChild;
 			if(this._tab1_contributors_list_node) {
 				this._tab1_contributors_list_observer = new MutationObserver(this._onTab1ContributorsListMutation.bind(this));
@@ -346,20 +348,20 @@ class Meeting {
 		} else {
 			console.error(new MeetStatisticsError("tab1_node not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log("tab1 attached");
 		}
-		
+
 		if(this._tab1_hands_container_node?.firstElementChild) {
 			this._attachTab1HandsList();
 		}
-		
+
 		if(this._tab1_contributors_list_node && this._tab1_contributors_list_node.classList.length > 1) {
 			this._attachTab1Contributors();
 		}
 	}
-	
+
 	_detachTab1() {
 		this._detachTab1HandsList();
 		this._detachTab1Contributors();
@@ -372,12 +374,12 @@ class Meeting {
 		this._tab1_contributors_list_node = null;
 
 		this._tab1_node = null;
-		
+
 		if(this._debug) {
 			console.log("tab1 detached");
 		}
 	}
-	
+
 	_attachTab1HandsList() {
 		this._tab1_hands_list_node = this._tab1_hands_container_node?.firstElementChild;
 		if(this._tab1_hands_list_node) {
@@ -389,28 +391,28 @@ class Meeting {
 		} else {
 			console.error(new MeetStatisticsError("tab1_hands_list_node not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log("tab1 hands list attached");
 		}
-		
+
 		if(this._tab1_hands_list_node && this._tab1_hands_list_node.classList.length > 1) {
 			this._attachTab1Hands();
 		}
 	}
-	
+
 	_detachTab1HandsList() {
 		this._detachTab1Hands();
 
 		this._tab1_hands_list_observer?.disconnect();
 		this._tab1_hands_list_observer = null;
 		this._tab1_hands_list_node = null;
-		
+
 		if(this._debug) {
 			console.log("tab1 hands list detached");
 		}
 	}
-	
+
 	_attachTab1Hands() {
 		this._tab1_hands_node = this._tab1_hands_list_node?.querySelector("div[role='list']");
 		if(this._tab1_hands_node) {
@@ -434,22 +436,22 @@ class Meeting {
 		} else {
 			console.error(new MeetStatisticsError("tab1_hands_node not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log("tab1 hands attached");
 		}
 	}
-	
+
 	_detachTab1Hands() {
 		this._tab1_hands_observer?.disconnect();
 		this._tab1_hands_observer = null;
 		this._tab1_hands_node = null;
-		
+
 		if(this._debug) {
 			console.log("tab1 hands detached");
 		}
 	}
-	
+
 	_attachTab1Contributors() {
 		this._tab1_contributors_node = this._tab1_contributors_list_node?.querySelector("div[role='list']");
 		if(this._tab1_contributors_node) {
@@ -460,11 +462,11 @@ class Meeting {
 		} else {
 			console.error(new MeetStatisticsError("tab1_contributors_node not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log("tab1 contributors attached");
 		}
-		
+
 		if(this._tab1_contributors_node) {
 			for(const node of this._tab1_contributors_node.children) {
 				const id = node.getAttribute("data-participant-id");
@@ -488,19 +490,19 @@ class Meeting {
 			}
 		}
 	}
-	
+
 	_detachTab1Contributors() {
 		this._tab1_contributors_observer?.disconnect();
 		this._tab1_contributors_observer = null;
 		this._tab1_contributors_node = null;
 
 		this.participants.forEach(participant => participant.detachTab());
-		
+
 		if(this._debug) {
 			console.log("tab1 contributors detached");
 		}
 	}
-	
+
 	_attachTab2() {
 		this._tab2_node = document.querySelector("div[data-tab-id='2']");
 		if(this._tab2_node) {
@@ -517,12 +519,12 @@ class Meeting {
 		} else {
 			console.error(new MeetStatisticsError("tab2_node not found"));
 		}
-		
+
 		if(this._debug) {
 			console.log("tab2 attached");
 		}
 	}
-	
+
 	_detachTab2() {
 		this._tab2_chat_observer?.disconnect();
 		this._tab2_chat_observer = null;
@@ -578,7 +580,7 @@ class Meeting {
 			}
 		}, this._grid_delay);
 	}
-	
+
 	/**
 	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
@@ -606,7 +608,7 @@ class Meeting {
 			}
 		}
 	}
-	
+
 	/**
 	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
@@ -638,7 +640,7 @@ class Meeting {
 			}
 		}
 	}
-	
+
 	/**
 	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
@@ -667,7 +669,7 @@ class Meeting {
 			}
 		}
 	}
-	
+
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
@@ -681,7 +683,7 @@ class Meeting {
 			this._detachTab1HandsList();
 		}
 	}
-	
+
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
@@ -695,7 +697,7 @@ class Meeting {
 			this._detachTab1Hands();
 		}
 	}
-	
+
 	/**
 	 * @param {(MutationRecord & { addedNodes: Element[] })[]} event 
 	 */
@@ -719,7 +721,7 @@ class Meeting {
 			}
 		}
 	}
-	
+
 	/**
 	 * @param {MutationRecord[]} event 
 	 */
@@ -733,7 +735,7 @@ class Meeting {
 			this._detachTab1Contributors();
 		}
 	}
-	
+
 	/**
 	 * @param {MutationRecord} event 
 	 */
