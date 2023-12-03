@@ -73,7 +73,7 @@ class TableRow {
 		return Object.entries(this.state).reduce((a, t) => {
 			a[t[0]] = t[1].ren;
 			return a;
-		}, {});
+		}, /** @type {ReturnType<typeof Utils.parseData>} */ ({}));
 	}
 
 	get timeNode() {

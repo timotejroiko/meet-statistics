@@ -1,18 +1,14 @@
 /* ROUTING */
 
-body > div {
-    display: none;
-}
-
-body > div.show {
+#main {
     display: flex;
 }
 
-#main .content.opts .container, #main .content .options {
+#main .content .container, #main .content .options {
     display: none;
 }
 
-#main .content .container, #main .content.opts .options {
+#main.main:not(.opts) .content .main, #main.meeting:not(.opts) .content .meeting, #main.meeting:not(.opts) .content .meeting, #main.opts .content .options {
     display: block;
 }
 
@@ -118,6 +114,23 @@ body > div.show {
     font-size: 1.6em;
 }
 
+#main .container:not(.main) h2 {
+    margin: 20px;
+}
+
+#main .container h3 {
+    margin: -15px 0 0 20px;
+    color: #555;
+    font-weight: normal;
+}
+
+#main .container .back {
+    margin: 40px 20px 0px 16px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 2.5em;
+}
+
 #main .container .toolbar {
     display: flex;
     justify-content: space-between;
@@ -128,6 +141,7 @@ body > div.show {
     display: flex;
     align-items: center;
     flex-grow: 1;
+    position: relative;
 }
 
 #main .container .toolbar .search input {
@@ -197,6 +211,10 @@ body > div.show {
     padding: 0 10px;
 }
 
+#main .container.meeting table .center {
+    padding: 20px 10px;
+}
+
 #main .container table .checkbox {
     width: 15px;
 }
@@ -213,89 +231,136 @@ body > div.show {
     width: 15px;
 }
 
-#main .container table .head th {
+#main .container table th {
     padding: 0;
     color: #777;
     font-size: 0.8em;
     cursor: pointer;
     background: #f5f5f5;
+    position: relative;
 }
 
-#main .container table .head th:nth-child(n+3) {
+#main .container table th::before {
+    content: attr(data-ui);
+    position: absolute;
+    color: #777;
+    font-size: 0.5rem;
+    margin-top: 5px;
+    margin-left: -8px;
+}
+
+#main .container.main table th:nth-child(n+3) {
     width: 12%;
 }
 
-#main .container table .head th:nth-child(3) {
+#main .container.main table th:nth-child(3) {
     min-width: 80px;
 }
 
-#main .container table .head th:nth-child(6) {
+#main .container.main table th:nth-child(6) {
     min-width: 120px;
 }
 
-#main .container table .participant {
+#main .container.meeting table th:first-child {
+    width: 50%;
+}
+
+#main .container table tr {
     cursor: pointer;
 }
 
-#main .container table .participant .break {
+#main .container table tr.participant td:nth-child(1) {
+    display: flex;
+    align-items: center;
+    text-align: left;
+}
+
+#main .container table tr.participant td:nth-child(1) img {
+    padding: 5px 10px;
+    border-radius: 50%;
+    height: 48px;
+    width: 48px;
+}
+
+#main .container table tr.participant td {
+    text-align: center;
+    padding: 0 5px;
+}
+
+#main .container table tr.participant td p {
+    cursor: text;
+}
+
+#main .container table tr .break {
     cursor: text;
     display: inline-block;
 }
 
-#main .container table .participant:hover {
+#main .container.meeting table tr .break span {
+    background: lightblue;
+    margin-right: 5px;
+    border-radius: 3px;
+    padding: 0 5px;
+    font-size: 10px;
+    display: inline-block;
+    line-height: 16px;
+    vertical-align: top;
+}
+
+#main .container table tr:hover {
     background: #eee;
 }
 
-#main .container table .participant.hide {
+#main .container table tr.hide {
     display: none;
 }
 
-#main .container table .participant td {
+#main .container table tr td {
     padding: 0;
     border-top: 1px solid #ddd;
 }
 
-#main .container table .participant td p {
+#main .container table tr td p {
     margin: 0;
 }
 
-#main .container table .participant td p.id {
+#main .container table tr td p.id {
     color: #777;
     font-size: 0.8em;
 }
 
-#main .container table .participant td p.time {
+#main .container table tr td p.time {
     color: #777;
     font-size: 0.8em;
 }
 
-#main .container table .participant td.n p {
+#main .container table tr td.n p {
     display: inline-block;
     vertical-align: top;
     margin-right: 5px;
 }
 
-#main .container table .participant td.n span {
+#main .container table tr td.n span {
     color: #777;
     margin-left: 5px;
 }
 
-#main .container table .participant td.actions span {
+#main .container table tr td.actions span {
     padding: 3px;
     margin: 0 3px;
     cursor: pointer;
 }
 
-#main .container table .participant td.actions span:hover {
+#main .container table tr td.actions span:hover {
     opacity: 0.5;
 }
 
-#main .container table .participant td.actions span:not(.delete) {
+#main .container table tr td.actions span:not(.delete) {
     transform: translate(0px, -3px);
     padding-bottom: 10px;
 }
 
-#main .container table .participant td.actions span[data-content]::before {
+#main .container table tr td.actions span[data-content]::before {
     content: attr(data-content);
     position: absolute;
     font-size: 0.4em;
@@ -306,7 +371,7 @@ body > div.show {
     bottom: 3px;
 }
 
-#main .container table .participant td.actions span.delete {
+#main .container table tr td.actions span.delete {
     color: red;
 }
 
@@ -315,6 +380,8 @@ body > div.show {
 #main .content .options {
 	padding: 20px 40px;
 	box-sizing: border-box;
+    max-width: 500px;
+    margin: 100px auto 0 auto;
 }
 
 #main .content .options .option {

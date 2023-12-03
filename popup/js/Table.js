@@ -20,7 +20,7 @@ class Table {
 		this.meetingNode.dataset.id = meeting.id;
 		this.titleNode.textContent = meeting.title;
 		this.timeNode.textContent = Utils.milliToHHMMSS(meeting.lastSeen - meeting.firstSeen);
-		this.pageButton.href = `${this.pageButton.href.split("?")[0]}?meeting=${meeting.dataId}`;
+		this.pageButton.href = `${this.pageButton.href.split("?")[0]}?id=${meeting.dataId}`;
 	}
 
 	async load() {

@@ -1,5 +1,3 @@
-/* global Store, Meeting */
-
 "use strict";
 
 Store.getOptions().then(async options => {

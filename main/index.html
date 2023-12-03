@@ -54,7 +54,7 @@
 				</div>
 			</div>
 			<div class="content">
-				<div class="container">
+				<div class="container main">
 					<h2>Meetings History</h2>
 					<div class="toolbar">
 						<div class="search">
@@ -78,16 +78,70 @@
 					</div>
 					<table>
 						<tbody>
-							<tr class="head">
+							<tr>
 								<th class="checkbox"><label><input type="checkbox" title="Select All" /></label></th>
-								<th class="left">MEETING</th>
-								<th class="left">DATE</th>
-								<th class="center">PARTICIPANTS</th>
-								<th class="center">DURATION</th>
+								<th class="left" data-sort="name">MEETING</th>
+								<th class="left" data-sort="date" data-ui="▼">DATE</th>
+								<th class="center" data-sort="participants">PARTICIPANTS</th>
+								<th class="center" data-sort="duration">DURATION</th>
 								<th class="center">ACTIONS</th>
 							</tr>
 						</tbody>
 					</table>
+				</div>
+				<div class="container meeting">
+					<span class="material-symbols-rounded back" title="Back">arrow_back</span>
+					<h2>?</h2>
+					<h3>?</h3>
+					<div class="toolbar">
+						<div class="search">
+							<input type="search" placeholder="Search" />
+							<span class="material-symbols-rounded">search</span>
+						</div>
+						<div class="actions">
+							<div>
+								<p>Download CSV</p>
+								<span class="material-symbols-rounded">table_rows_narrow</span>
+							</div>
+							<div>
+								<p>Download JSON</p>
+								<span class="material-symbols-rounded">data_object</span>
+							</div>
+							<div>
+								<p>Print</p>
+								<span class="material-symbols-rounded">print</span>
+							</div>
+						</div>
+					</div>
+					<table>
+						<tbody>
+							<tr>
+								<th class="center" data-sort="name" data-ui="▼"><span class="material-symbols-rounded" title="Participant">person</span></th>
+								<th class="center" data-sort="time"><span class="material-symbols-rounded" title="Attendance time">timer</span></th>
+								<th class="center" data-sort="cam"><span class="material-symbols-rounded" title="Camera time">videocam</span></th>
+								<th class="center" data-sort="mic"><span class="material-symbols-rounded" title="Mic time">mic</span></th>
+								<th class="center" data-sort="voice"><span class="material-symbols-rounded" title="Time speaking">record_voice_over</span></th>
+								<th class="center" data-sort="presentation"><span class="material-symbols-rounded" title="Time presenting">iframe</span></th>
+								<th class="center" data-sort="hands"><span class="material-symbols-rounded" title="Hands raised">front_hand</span></th>
+								<th class="center" data-sort="emojis"><span class="material-symbols-rounded" title="Emojis sent">mood</span></th>
+								<th class="center" data-sort="texts"><span class="material-symbols-rounded" title="Messages sent">chat</span></th>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div class="container participant">
+					<h2>?</h2>
+					<div class="toolbar">
+						<div class="actions">
+							<div>
+								<p>Print</p>
+								<span class="material-symbols-rounded">print</span>
+							</div>
+						</div>
+					</div>
+					<div>
+						<p>Coming Soon</p>
+					</div>
 				</div>
 				<div class="options">
 					<div class="option" data-option="track_cam">
@@ -130,16 +184,13 @@
 				</div>
 			</div>
 		</div>
-		<div id="meeting">
-			view meeting details
-		</div>
-		<div id="participant">
-			view participant details
-		</div>
 		<script src="../utils/Store.js"></script>
 		<script src="../utils/Utils.js"></script>
-		<script src="buttons.js"></script>
-		<script src="router.js"></script>
-		<script src="main.js"></script>
+		<script src="js/ParticipantRow.js"></script>
+		<script src="js/ParticipantTable.js"></script>
+		<script src="js/MeetingRow.js"></script>
+		<script src="js/MeetingTable.js"></script>
+		<script src="js/Main.js"></script>
+		<script src="js/index.js"></script>
 	</body>
 </html>

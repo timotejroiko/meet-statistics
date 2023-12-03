@@ -8,6 +8,11 @@
 		"browser": true,
 		"es6": true
 	},
+	"globals": {
+		"chrome": true,
+		"Store": true,
+		"Utils": true
+	},
 	"rules": {
 		"no-extra-parens":["error", "all", { "enforceForArrowConditionals": false, "conditionalAssign": false, "allowParensAfterCommentPattern": "@type" }],
 		"no-loss-of-precision": "error",
@@ -25,7 +30,6 @@
 		"eqeqeq":"error",
 		"grouped-accessor-pairs":"error",
 		"guard-for-in":"error",
-		"no-alert":"error",
 		"no-caller":"error",
 		"no-constructor-return":"error",
 		"no-div-regex":"error",

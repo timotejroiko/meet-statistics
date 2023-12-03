@@ -90,7 +90,7 @@ class Popup {
 
 		this.store.getOptions().then(options => {
 			for(const optionNode of this.optionsView) {
-				const key = optionNode.dataset.option;
+				const key = /** @type {string} */ (optionNode.dataset.option);
 				const button = /** @type {HTMLElement} */ (optionNode.children[1]);
 				button.textContent = options[key] ? "toggle_on" : "toggle_off";
 				optionNode.dataset.enabled = Boolean(options[key]).toString();
@@ -112,38 +112,30 @@ class Popup {
 		}
 		const table = this.table;
 		this.csvButton.onclick = () => {
-			let csv = "";
-			csv += `${Array.prototype.map.call(table.tableNode.querySelectorAll("tr th span"), x => `${x.getAttribute("title")}`).join(",")}\n`;
-			for(const row of table.tableView) {
-				csv += `${Array.prototype.map.call(row.querySelectorAll("td"), x => `${x.innerText}`).join(",")}\n`;
+			const participants = [];
+			for(const item of this.table?.data || []) {
+				participants.push({
+					...item.participant,
+					data: item.parsedState
+				})
 			}
-			const link = document.createElement("a");
-			link.href = `data:text/plain,${csv}`;
-			link.download = `${table.titleNode.textContent} - ${new Date(table.meeting.firstSeen).toISOString()}.csv`;
-			link.dispatchEvent(new MouseEvent("click", {
-				bubbles: true,
-				cancelable: true,
-				view: window
-			}));
+			const filename = `${table.titleNode.textContent} - ${new Date(table.meeting.firstSeen).toISOString()}`;
+			Utils.exportCSV(participants, filename);
 		};
 
 		this.jsonButton.onclick = async () => {
-			const meeting = table.meeting;
+			const meeting = /** @type {Parameters<typeof Utils.exportJSON>[0]} */ (Object.assign({ participants: [] }, this.meeting));
 			const participants = table.data.map(x => x.participant);
 			const participantsData = await this.store.getMultipleParticipantsData(table.meeting.dataId, participants.map(x => x.dataId));
-			meeting.participants = participants;
 			for(const participant of participants) {
-				participant.data = table.get(participant.dataId).parsedState;
-				participant.events = participantsData[participant.dataId];
+				meeting.participants.push({
+					...participant,
+					data: table.get(participant.dataId).parsedState,
+					events: participantsData[participant.dataId]
+				});
 			}
-			const link = document.createElement("a");
-			link.href = `data:text/plain,${JSON.stringify(meeting)}`;
-			link.download = `${table.titleNode.textContent} - ${new Date(meeting.firstSeen).toISOString()}.json`;
-			link.dispatchEvent(new MouseEvent("click", {
-				bubbles: true,
-				cancelable: true,
-				view: window
-			}));
+			const filename = `${meeting.title} - ${new Date(meeting.firstSeen).toISOString()}`;
+			Utils.exportJSON(meeting, filename);
 		};
 
 		this.pdfButton.onclick = async () => {

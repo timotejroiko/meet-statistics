@@ -35,7 +35,7 @@ class Utils {
 	 * 		presentation: number,
 	 * 		hands: number,
 	 * 		emojis: number,
-	 * 		text: number
+	 * 		texts: number
 	 * }}
 	 */
 	static parseData(participant, events, s = null) {
@@ -44,7 +44,8 @@ class Utils {
 				on: true,
 				t: 0,
 				acc: 0,
-				ren: 0
+				ren: 0,
+				d: []
 			},
 			cam: {
 				on: false,
@@ -96,12 +97,16 @@ class Utils {
 							state.time.on = true;
 							state.time.t = event.time;
 						}
+						state.time.d.push(event.data);
 						break;
 					}
 					case "leave": {
-						state.time.acc += event.time - state.time.t;
-						state.time.on = false;
-						state.time.t = event.time;
+						state.time.d.splice(state.time.d.indexOf(event.data), 1)[0];
+						if(!state.time.d.length) {
+							state.time.acc += event.time - state.time.t;
+							state.time.on = false;
+							state.time.t = event.time;
+						}
 						break;
 					}
 				}
@@ -124,5 +129,45 @@ class Utils {
 			a[t[0]] = t[1].ren;
 			return a;
 		}, /** @type {typeof state} */ ({}));
+	}
+
+	/**
+	 * @param {(ParticipantData & { data: ReturnType<typeof Utils.parseData> })[]} participants 
+	 * @param {string} filename 
+	 */
+	static exportCSV(participants, filename) {
+		let csv = `"Participant","Attendance time","Camera time","Mic time","Time speaking","Time presenting","Hands raised","Emojis sent","Messages sent"`;
+		for(const participant of participants) {
+			csv += "\n" + `"${participant.name}"`;
+			for(const key of ["time", "cam", "mic", "voice", "presentation"]) {
+				csv += "," + `"${Utils.milliToHHMMSSFull(participant.data[key])}"`;
+			}
+			for(const key of ["hands", "emojis", "texts"]) {
+				csv += "," + `"${participant.data[key].toString()}"`;
+			}
+		}
+		const link = document.createElement('a');
+		link.href = `data:text/plain,${csv}`;
+		link.download = `${filename}.csv`;
+		link.dispatchEvent(new MouseEvent('click', {
+			bubbles: true,
+			cancelable: true,
+			view: window
+		}));
+	}
+
+	/**
+	 * @param {MeetingData & { participants: (ParticipantData & { data: ReturnType<typeof Utils.parseData>, events: EventData[] })[] }} meeting 
+	 * @param {string} filename 
+	 */
+	static exportJSON(meeting, filename) {
+		const link = document.createElement("a");
+		link.href = `data:text/plain,${JSON.stringify(meeting)}`;
+		link.download = `${filename}.json`;
+		link.dispatchEvent(new MouseEvent("click", {
+			bubbles: true,
+			cancelable: true,
+			view: window
+		}));
 	}
 }
