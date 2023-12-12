@@ -94,7 +94,7 @@ class Participant {
 			});
 		}
 
-		const name = node.querySelector("div[jsslot] div[style]")?.textContent;
+		const name = node.querySelector("div[jsslot] > div")?.textContent;
 		if(name) {
 			if(!this.name) {
 				const words = name.split(/\s+/g);
@@ -172,7 +172,7 @@ class Participant {
 			console.error(new MeetStatisticsError("hand_node not found"));
 		}
 
-		this._emoji_node = node.firstElementChild?.lastElementChild?.firstElementChild?.firstElementChild;
+		this._emoji_node = node.firstElementChild?.lastElementChild?.firstElementChild?.nextElementSibling?.firstElementChild;
 		if(this._emoji_node) {
 			this._emoji_observer = new MutationObserver(this._onEmojiMutation.bind(this));
 			this._emoji_observer.observe(this._emoji_node, {

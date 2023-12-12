@@ -249,7 +249,7 @@ class Meeting {
 				childList: true
 			});
 
-			this._grid_reactions_node = this._grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
+			this._grid_reactions_node = this._grid_node.lastElementChild?.previousElementSibling?.previousElementSibling?.previousElementSibling?.firstElementChild?.firstElementChild?.firstElementChild;
 			if(this._grid_reactions_node) {
 				this._grid_reactions_observer = new MutationObserver(this._onReactionMutation.bind(this));
 				this._grid_reactions_observer.observe(this._grid_reactions_node, {

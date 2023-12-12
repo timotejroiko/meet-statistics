@@ -16,7 +16,8 @@ class TableRow {
 				on: true,
 				t: 0,
 				acc: 0,
-				ren: 0
+				ren: 0,
+				d: []
 			},
 			cam: {
 				on: false,
