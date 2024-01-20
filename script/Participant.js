@@ -172,7 +172,7 @@ class Participant {
 			console.error(new MeetStatisticsError("hand_node not found"));
 		}
 
-		this._emoji_node = node.firstElementChild?.lastElementChild?.firstElementChild?.nextElementSibling?.firstElementChild;
+		this._emoji_node = node.firstElementChild?.lastElementChild?.firstElementChild?.nextElementSibling?.firstElementChild || node.firstElementChild?.lastElementChild?.firstElementChild?.firstElementChild;
 		if(this._emoji_node) {
 			this._emoji_observer = new MutationObserver(this._onEmojiMutation.bind(this));
 			this._emoji_observer.observe(this._emoji_node, {
