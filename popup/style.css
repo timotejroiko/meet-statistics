@@ -5,6 +5,10 @@ html {
 	min-width: 400px;
 }
 
+body .container.loading {
+	display: none;
+}
+
 .container .no-meeting, .container.has-meeting .meeting, .container.has-options .options {
 	display: block;
 }

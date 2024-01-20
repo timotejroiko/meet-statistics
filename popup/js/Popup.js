@@ -20,6 +20,7 @@ class Popup {
 	async init() {
 		this.bindOptionsButtons();
 		const meeting = await this.getCurrentMeeting();
+		this.containerNode.classList.remove("loading");
 		if(meeting) {
 			this.meeting = meeting;
 			this.containerNode.classList.add("has-meeting");
@@ -72,7 +73,14 @@ class Popup {
 			active: true,
 			currentWindow: true
 		});
-		const id = tab?.url?.split("meet.google.com/")[1];
+		let id = tab?.url?.split("meet.google.com/")[1];
+		if(!id) {
+			const [tab] = await chrome.tabs.query({
+				active: true,
+				lastActiveWindow: true
+			});
+			id = tab?.url?.split("meet.google.com/")[1];
+		}
 		if(id) {
 			const list = await this.store.listMeetings();
 			return list.find(x => x.id === id && x.lastSeen + 3600000 > Date.now());

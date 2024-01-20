@@ -90,13 +90,13 @@ class Meeting {
 			} else if(grid && !this._grid_node) {
 				this._attachMain();
 			}
-			const tab1 = document.querySelector("div[data-tab-id='1']");
+			const tab1 = document.querySelector("div[data-panel-container-id=sidePanel1]");
 			if(this._tab1_node && !tab1) {
 				this._detachTab1();
 			} else if(tab1 && !this._tab1_node) {
 				this._attachTab1();
 			}
-			const tab2 = document.querySelector("div[data-tab-id='2']");
+			const tab2 = document.querySelector("div[data-panel-container-id=sidePanel2]");
 			if(this._tab2_node && !tab2) {
 				this._detachTab2();
 			} else if(tab2 && !this._tab2_node) {
@@ -323,9 +323,9 @@ class Meeting {
 	}
 
 	_attachTab1() {
-		this._tab1_node = document.querySelector("div[data-tab-id='1']");
+		this._tab1_node = document.querySelector("div[data-panel-container-id=sidePanel1]");
 		if(this._tab1_node) {
-			this._tab1_hands_container_node = this._tab1_node.querySelector(":scope > div > div > h2")?.nextElementSibling;
+			this._tab1_hands_container_node = this._tab1_node.querySelector(":scope > div > div > div > h2")?.nextElementSibling;
 			if(this._tab1_hands_container_node) {
 				this._tab1_hands_container_observer = new MutationObserver(this._onTab1HandsContainerMutation.bind(this));
 				this._tab1_hands_container_observer.observe(this._tab1_hands_container_node, {
@@ -504,7 +504,7 @@ class Meeting {
 	}
 
 	_attachTab2() {
-		this._tab2_node = document.querySelector("div[data-tab-id='2']");
+		this._tab2_node = document.querySelector("div[data-panel-container-id=sidePanel2]");
 		if(this._tab2_node) {
 			this._tab2_chat_node = this._tab2_node.querySelector("div[aria-live]");
 			if(this._tab2_chat_node) {
