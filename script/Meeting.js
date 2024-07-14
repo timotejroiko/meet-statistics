@@ -660,7 +660,7 @@ class Meeting {
 			return;
 		}
 		const content = node?.textContent;
-		const author = node?.parentElement?.parentElement?.previousElementSibling?.firstElementChild?.textContent?.split(/\s+/g).map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
+		const author = node?.closest("div[tabindex]")?.firstChild.firstChild.textContent?.split(/\s+/g).map(x => x[0].toUpperCase() + x.slice(1)).join(" ");
 		const now = Date.now();
 		for(const participant of this.participants.values()) {
 			if(participant instanceof Participant && ((participant.self && author === this._self) || participant.name === author)) {
