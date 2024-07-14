@@ -110,7 +110,7 @@ class ParticipantTable {
 
     bindMainToolbarButtons() {
         this.backNode.onclick = () => {
-            history.back();
+            location.replace(location.pathname);
         }
 
 		this.searchNode.oninput = () => {
