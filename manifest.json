@@ -6,12 +6,12 @@
 	"action": {
 		"default_popup": "popup/index.html",
 		"default_icon": {
-			"16": "img/16.png",
-			"24": "img/24.png",
-			"32": "img/32.png",
-			"48": "img/48.png",
-			"64": "img/64.png",
-			"128": "img/128.png"
+			"16": "main/img/16.png",
+			"24": "main/img/24.png",
+			"32": "main/img/32.png",
+			"48": "main/img/48.png",
+			"64": "main/img/64.png",
+			"128": "main/img/128.png"
 		}
 	},
 	"options_page": "main/index.html",
@@ -19,23 +19,34 @@
 	"content_scripts": [
 		{
 			"js": [
-				"utils/Store.js",
-				"script/Participant.js",
-				"script/Meeting.js",
-				"script/index.js"
+				"content/main.js"
 			],
 			"matches": [
 				"*://meet.google.com/*-*-*"
-			]
+			],
+			"run_at": "document_start",
+			"world": "MAIN"
+		},
+		{
+			"js": [
+				"content/decoder.js",
+				"utils/Store.js",
+				"utils/Utils.js",
+				"content/isolate.js"
+			],
+			"matches": [
+				"*://meet.google.com/*-*-*"
+			],
+			"run_at": "document_start"
 		}
 	],
 	"icons": {
-		"16": "img/16.png",
-		"24": "img/24.png",
-		"32": "img/32.png",
-		"48": "img/48.png",
-		"64": "img/64.png",
-		"128": "img/128.png"
+		"16": "main/img/16.png",
+		"24": "main/img/24.png",
+		"32": "main/img/32.png",
+		"48": "main/img/48.png",
+		"64": "main/img/64.png",
+		"128": "main/img/128.png"
 	},
 	"author": {
 		"email": "timotejroiko@yahoo.com.br"

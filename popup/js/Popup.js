@@ -20,7 +20,6 @@ class Popup {
 	async init() {
 		this.bindOptionsButtons();
 		const meeting = await this.getCurrentMeeting();
-		this.containerNode.classList.remove("loading");
 		if(meeting) {
 			this.meeting = meeting;
 			this.containerNode.classList.add("has-meeting");
@@ -31,6 +30,7 @@ class Popup {
 			this.bindTableButtons();
 			this.initListener();
 		}
+		this.containerNode.classList.remove("loading");
 	}
 
 	initListener() {
