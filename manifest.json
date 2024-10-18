@@ -27,6 +27,14 @@
 			"matches": [
 				"*://meet.google.com/*-*-*"
 			]
+		},
+		{
+			"js": [
+				"script/AttendanceListHandler.js"
+			],
+			"matches": [
+				"*://lms.ada.tech/teacher/lectures"
+			]
 		}
 	],
 	"icons": {

@@ -19,7 +19,9 @@ class Popup {
 
 	async init() {
 		this.bindOptionsButtons();
+		
 		const meeting = await this.getCurrentMeeting();
+		const isAttendanceList = await this.isAttendanceList();
 		this.containerNode.classList.remove("loading");
 		if(meeting) {
 			this.meeting = meeting;
@@ -30,6 +32,9 @@ class Popup {
 			this.bindDowloadButtons();
 			this.bindTableButtons();
 			this.initListener();
+		}else if(isAttendanceList) {
+			const attendanceList = new AttendanceList(this.store);
+			await attendanceList.render();
 		}
 	}
 
@@ -68,22 +73,40 @@ class Popup {
      * @returns {Promise<Awaited<ReturnType<Store.listMeetings>>[0] | undefined>}
      */
 	async getCurrentMeeting() {
-		// @ts-ignore
-		const [tab] = await chrome.tabs.query({
-			active: true,
-			currentWindow: true
-		});
-		let id = tab?.url?.split("meet.google.com/")[1];
-		if(!id) {
+		try {
+			// @ts-ignore
 			const [tab] = await chrome.tabs.query({
 				active: true,
-				lastActiveWindow: true
+				currentWindow: true
 			});
-			id = tab?.url?.split("meet.google.com/")[1];
+			let id = tab?.url?.split("meet.google.com/")[1];
+			if(!id) {
+				const [tab] = await chrome.tabs.query({
+					active: true,
+					lastActiveWindow: true
+				});
+				id = tab?.url?.split("meet.google.com/")[1];
+			}
+			if(id) {
+				const list = await this.store.listMeetings();
+				return list.find(x => x.id === id && x.lastSeen + 3600000 > Date.now());
+			}
+		}catch(error){
+			console.error(error);
 		}
-		if(id) {
-			const list = await this.store.listMeetings();
-			return list.find(x => x.id === id && x.lastSeen + 3600000 > Date.now());
+	}
+
+	async isAttendanceList() {
+		try{
+			const [tab] = await chrome.tabs.query({
+				active: true,
+				currentWindow: true
+			});
+
+			return tab?.url?.includes('teacher/lectures');
+
+		}catch(error){
+			console.error(error);
 		}
 	}
 
